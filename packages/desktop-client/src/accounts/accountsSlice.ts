@@ -142,15 +142,31 @@ type CreateAccountPayload = {
   name: string;
   balance: number;
   offBudget: boolean;
+  isDebt?: boolean;
+  debtOriginalBalance?: number;
+  debtInterestRate?: number;
+  debtMinimumPayment?: number;
 };
 
 export const createAccount = createAppAsyncThunk(
   `${sliceName}/createAccount`,
-  async ({ name, balance, offBudget }: CreateAccountPayload) => {
+  async ({
+    name,
+    balance,
+    offBudget,
+    isDebt,
+    debtOriginalBalance,
+    debtInterestRate,
+    debtMinimumPayment,
+  }: CreateAccountPayload) => {
     const id = await send('account-create', {
       name,
       balance,
       offBudget,
+      isDebt,
+      debtOriginalBalance,
+      debtInterestRate,
+      debtMinimumPayment,
     });
     return id;
   },

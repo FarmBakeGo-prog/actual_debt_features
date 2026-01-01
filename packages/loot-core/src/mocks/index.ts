@@ -24,6 +24,10 @@ export function generateAccount(
     last_reconciled: null,
     tombstone: 0,
     closed: 0,
+    is_debt: 0,
+    debt_original_balance: null,
+    debt_interest_rate: null,
+    debt_minimum_payment: null,
     ...emptySyncFields(),
   };
 

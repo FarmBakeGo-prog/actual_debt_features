@@ -38,6 +38,10 @@ export function CreateLocalAccountModal() {
   const [name, setName] = useState('');
   const [offbudget, setOffbudget] = useState(false);
   const [balance, setBalance] = useState('0');
+  const [isDebt, setIsDebt] = useState(false);
+  const [debtOriginalBalance, setDebtOriginalBalance] = useState('');
+  const [debtInterestRate, setDebtInterestRate] = useState('');
+  const [debtMinimumPayment, setDebtMinimumPayment] = useState('');
 
   const [nameError, setNameError] = useState(null);
   const [balanceError, setBalanceError] = useState(false);
@@ -69,6 +73,16 @@ export function CreateLocalAccountModal() {
           name,
           balance: toRelaxedNumber(balance),
           offBudget: offbudget,
+          isDebt,
+          debtOriginalBalance: debtOriginalBalance
+            ? toRelaxedNumber(debtOriginalBalance)
+            : undefined,
+          debtInterestRate: debtInterestRate
+            ? parseFloat(debtInterestRate)
+            : undefined,
+          debtMinimumPayment: debtMinimumPayment
+            ? toRelaxedNumber(debtMinimumPayment)
+            : undefined,
         }),
       ).unwrap();
       navigate('/accounts/' + id);
@@ -160,6 +174,88 @@ export function CreateLocalAccountModal() {
                   </div>
                 </View>
               </View>
+
+              <View
+                style={{
+                  width: '100%',
+                  flexDirection: 'row',
+                  justifyContent: 'flex-end',
+                  marginTop: 10,
+                }}
+              >
+                <View style={{ flexDirection: 'column' }}>
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      justifyContent: 'flex-end',
+                    }}
+                  >
+                    <Checkbox
+                      id="isdebt"
+                      name="isdebt"
+                      checked={isDebt}
+                      onChange={() => setIsDebt(!isDebt)}
+                    />
+                    <label
+                      htmlFor="isdebt"
+                      style={{
+                        userSelect: 'none',
+                        verticalAlign: 'center',
+                      }}
+                    >
+                      <Trans>Debt Account</Trans>
+                    </label>
+                  </View>
+                  <div
+                    style={{
+                      textAlign: 'right',
+                      fontSize: '0.7em',
+                      color: theme.pageTextLight,
+                      marginTop: 3,
+                    }}
+                  >
+                    <Text>
+                      <Trans>
+                        Track loans with interest and payment schedules
+                      </Trans>
+                    </Text>
+                  </div>
+                </View>
+              </View>
+
+              {isDebt && (
+                <>
+                  <InlineField label={t('Original Balance')} width="100%">
+                    <Input
+                      name="debtOriginalBalance"
+                      inputMode="decimal"
+                      value={debtOriginalBalance}
+                      onChangeValue={setDebtOriginalBalance}
+                      style={{ flex: 1 }}
+                    />
+                  </InlineField>
+
+                  <InlineField label={t('Interest Rate (%)')} width="100%">
+                    <Input
+                      name="debtInterestRate"
+                      inputMode="decimal"
+                      value={debtInterestRate}
+                      onChangeValue={setDebtInterestRate}
+                      style={{ flex: 1 }}
+                    />
+                  </InlineField>
+
+                  <InlineField label={t('Minimum Payment')} width="100%">
+                    <Input
+                      name="debtMinimumPayment"
+                      inputMode="decimal"
+                      value={debtMinimumPayment}
+                      onChangeValue={setDebtMinimumPayment}
+                      style={{ flex: 1 }}
+                    />
+                  </InlineField>
+                </>
+              )}
 
               <InlineField label={t('Balance')} width="100%">
                 <Input

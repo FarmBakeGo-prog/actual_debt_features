@@ -12,6 +12,7 @@ import { SecondaryItem } from './SecondaryItem';
 import { moveAccount } from '@desktop-client/accounts/accountsSlice';
 import { useAccounts } from '@desktop-client/hooks/useAccounts';
 import { useClosedAccounts } from '@desktop-client/hooks/useClosedAccounts';
+import { useDebtAccounts } from '@desktop-client/hooks/useDebtAccounts';
 import { useFailedAccounts } from '@desktop-client/hooks/useFailedAccounts';
 import { useLocalPref } from '@desktop-client/hooks/useLocalPref';
 import { useOffBudgetAccounts } from '@desktop-client/hooks/useOffBudgetAccounts';
@@ -31,6 +32,7 @@ export function Accounts() {
   const updatedAccounts = useUpdatedAccounts();
   const offbudgetAccounts = useOffBudgetAccounts();
   const onBudgetAccounts = useOnBudgetAccounts();
+  const debtAccounts = useDebtAccounts();
   const closedAccounts = useClosedAccounts();
   const syncingAccountIds = useSelector(state => state.account.accountsSyncing);
 
@@ -144,6 +146,37 @@ export function Accounts() {
         )}
 
         {offbudgetAccounts.map((account, i) => (
+          <Account
+            key={account.id}
+            name={account.name}
+            account={account}
+            connected={!!account.bank}
+            pending={syncingAccountIds.includes(account.id)}
+            failed={failedAccounts.has(account.id)}
+            updated={updatedAccounts.includes(account.id)}
+            to={getAccountPath(account)}
+            query={bindings.accountBalance(account.id)}
+            onDragChange={onDragChange}
+            onDrop={onReorder}
+            outerStyle={makeDropPadding(i)}
+          />
+        ))}
+
+        {debtAccounts.length > 0 && (
+          <Account
+            name={t('Debt Accounts')}
+            to="/accounts/debt"
+            query={bindings.debtAccountBalance()}
+            style={{
+              fontWeight,
+              marginTop: 13,
+              marginBottom: 5,
+            }}
+            titleAccount
+          />
+        )}
+
+        {debtAccounts.map((account, i) => (
           <Account
             key={account.id}
             name={account.name}

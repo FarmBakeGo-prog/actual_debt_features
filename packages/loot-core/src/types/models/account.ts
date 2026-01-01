@@ -6,6 +6,10 @@ export type AccountEntity = {
   sort_order: number;
   last_reconciled: string | null;
   tombstone: 0 | 1;
+  is_debt: 0 | 1;
+  debt_original_balance: number | null;
+  debt_interest_rate: number | null;
+  debt_minimum_payment: number | null;
 } & (_SyncFields<true> | _SyncFields<false>);
 
 export type _SyncFields<T> = {

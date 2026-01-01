@@ -12,6 +12,7 @@ export type Spreadsheets = {
     'accounts-balance': number;
     'onbudget-accounts-balance': number;
     'offbudget-accounts-balance': number;
+    'debt-accounts-balance': number;
     'closed-accounts-balance': number;
     balanceCleared: number;
     balanceUncleared: number;

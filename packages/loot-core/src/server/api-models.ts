@@ -13,6 +13,10 @@ import * as models from './models';
 export type APIAccountEntity = Pick<AccountEntity, 'id' | 'name'> & {
   offbudget?: boolean;
   closed?: boolean;
+  isDebt?: boolean;
+  debtOriginalBalance?: number;
+  debtInterestRate?: number;
+  debtMinimumPayment?: number;
 };
 
 export const accountModel = {
@@ -24,6 +28,10 @@ export const accountModel = {
       name: account.name,
       offbudget: account.offbudget ? true : false,
       closed: account.closed ? true : false,
+      isDebt: account.is_debt ? true : false,
+      debtOriginalBalance: account.debt_original_balance ?? undefined,
+      debtInterestRate: account.debt_interest_rate ?? undefined,
+      debtMinimumPayment: account.debt_minimum_payment ?? undefined,
     };
   },
 
@@ -34,6 +42,18 @@ export const accountModel = {
     }
     if ('closed' in account) {
       result.closed = account.closed ? 1 : 0;
+    }
+    if ('isDebt' in account) {
+      result.is_debt = account.isDebt ? 1 : 0;
+    }
+    if ('debtOriginalBalance' in account) {
+      result.debt_original_balance = account.debtOriginalBalance ?? null;
+    }
+    if ('debtInterestRate' in account) {
+      result.debt_interest_rate = account.debtInterestRate ?? null;
+    }
+    if ('debtMinimumPayment' in account) {
+      result.debt_minimum_payment = account.debtMinimumPayment ?? null;
     }
     return result;
   },

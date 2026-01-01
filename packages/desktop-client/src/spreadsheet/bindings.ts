@@ -77,6 +77,15 @@ export function offBudgetAccountBalance() {
   } satisfies Binding<'account', 'offbudget-accounts-balance'>;
 }
 
+export function debtAccountBalance() {
+  return {
+    name: `debt-accounts-balance`,
+    query: q('transactions')
+      .filter({ 'account.is_debt': true, 'account.closed': false })
+      .calculate({ $sum: '$amount' }),
+  } satisfies Binding<'account', 'debt-accounts-balance'>;
+}
+
 export function closedAccountBalance() {
   return {
     name: `closed-accounts-balance`,
