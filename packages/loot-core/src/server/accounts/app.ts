@@ -38,10 +38,11 @@ import * as link from './link';
 import { getStartingBalancePayee } from './payees';
 import * as bankSync from './sync';
 import { detectDebtAccounts } from './debt-detection';
-import {
-  setupInterestSchedule,
-  deleteInterestSchedule,
-} from './interest-automation';
+// TODO: Re-enable when interest-automation uses correct DB schema
+// import {
+//   setupInterestSchedule,
+//   deleteInterestSchedule,
+// } from './interest-automation';
 import { ensureDebtCategories } from '../budget/app';
 
 export type AccountHandlers = {
@@ -169,22 +170,24 @@ async function updateAccount({
     const finalPostingDay =
       interest_posting_day ?? currentAccount.interest_posting_day;
 
-    if (finalApr && finalApr > 0 && finalScheme && finalFrequency) {
-      // Ensure debt categories exist to get the interest category ID
-      const { interestCategoryId } = await ensureDebtCategories();
-
-      await setupInterestSchedule({
-        accountId: id,
-        apr: finalApr,
-        interestScheme: finalScheme,
-        compoundingFrequency: finalFrequency,
-        interestPostingDay: finalPostingDay ?? null,
-        interestCategoryId,
-      });
-    } else if (finalApr === 0 || finalApr === null) {
-      // Remove interest schedule if APR is set to 0 or null
-      await deleteInterestSchedule(id);
-    }
+    // TODO: Re-enable when interest-automation uses correct DB schema
+    // if (finalApr && finalApr > 0 && finalScheme && finalFrequency) {
+    //   // Ensure debt categories exist to get the interest category ID
+    //   const { interestCategoryId } = await ensureDebtCategories();
+    //
+    //   await setupInterestSchedule({
+    //     accountId: id,
+    //     apr: finalApr,
+    //     interestScheme: finalScheme,
+    //     compoundingFrequency: finalFrequency,
+    //     interestPostingDay: finalPostingDay ?? null,
+    //     interestCategoryId,
+    //   });
+    // } else if (finalApr === 0 || finalApr === null) {
+    //   // Remove interest schedule if APR is set to 0 or null
+    //   await deleteInterestSchedule(id);
+    // }
+    void finalApr; void finalScheme; void finalFrequency; void finalPostingDay;
   }
 
   return {};
@@ -505,26 +508,27 @@ async function createAccount({
     });
   }
 
+  // TODO: Re-enable when interest-automation uses correct DB schema
   // Set up interest schedule for debt accounts with APR configured
-  if (
-    isDebt &&
-    apr != null &&
-    apr > 0 &&
-    interestScheme &&
-    compoundingFrequency
-  ) {
-    // Ensure debt categories exist to get the interest category ID
-    const { interestCategoryId } = await ensureDebtCategories();
-
-    await setupInterestSchedule({
-      accountId: id,
-      apr,
-      interestScheme,
-      compoundingFrequency,
-      interestPostingDay: interestPostingDay ?? null,
-      interestCategoryId,
-    });
-  }
+  // if (
+  //   isDebt &&
+  //   apr != null &&
+  //   apr > 0 &&
+  //   interestScheme &&
+  //   compoundingFrequency
+  // ) {
+  //   // Ensure debt categories exist to get the interest category ID
+  //   const { interestCategoryId } = await ensureDebtCategories();
+  //
+  //   await setupInterestSchedule({
+  //     accountId: id,
+  //     apr,
+  //     interestScheme,
+  //     compoundingFrequency,
+  //     interestPostingDay: interestPostingDay ?? null,
+  //     interestCategoryId,
+  //   });
+  // }
 
   return id;
 }
@@ -662,17 +666,18 @@ async function convertToDebtAccount({
       }
     }
 
+    // TODO: Re-enable when interest-automation uses correct DB schema
     // Set up interest schedule for automatic interest accrual
-    if (apr && apr > 0 && interestScheme && compoundingFrequency) {
-      await setupInterestSchedule({
-        accountId: id,
-        apr,
-        interestScheme,
-        compoundingFrequency,
-        interestPostingDay: interestPostingDay ?? null,
-        interestCategoryId: finalInterestCategoryId,
-      });
-    }
+    // if (apr && apr > 0 && interestScheme && compoundingFrequency) {
+    //   await setupInterestSchedule({
+    //     accountId: id,
+    //     apr,
+    //     interestScheme,
+    //     compoundingFrequency,
+    //     interestPostingDay: interestPostingDay ?? null,
+    //     interestCategoryId: finalInterestCategoryId,
+    //   });
+    // }
 
     return {
       success: true,

@@ -77,6 +77,17 @@ export const schema = {
     account_sync_source: f('string'),
     last_reconciled: f('string'),
     last_sync: f('string'),
+    // Debt tracking fields
+    is_debt: f('boolean'),
+    debt_type: f('string'),
+    debt_original_balance: f('integer'),
+    debt_interest_rate: f('float'),
+    debt_minimum_payment: f('integer'),
+    apr: f('float'),
+    interest_scheme: f('string'),
+    compounding_frequency: f('string'),
+    interest_posting_day: f('integer'),
+    apr_last_updated: f('string'),
   },
   categories: {
     id: f('id'),
