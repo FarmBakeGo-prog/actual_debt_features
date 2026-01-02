@@ -25,6 +25,7 @@ import { CoverModal } from './modals/CoverModal';
 import { CreateAccountModal } from './modals/CreateAccountModal';
 import { CreateEncryptionKeyModal } from './modals/CreateEncryptionKeyModal';
 import { CreateLocalAccountModal } from './modals/CreateLocalAccountModal';
+import { DebtMigrationWizard } from './modals/DebtMigrationWizard';
 import { EditUserAccess } from './modals/EditAccess';
 import { EditFieldModal } from './modals/EditFieldModal';
 import { EditRuleModal } from './modals/EditRuleModal';
@@ -148,6 +149,9 @@ export function Modals() {
 
         case 'convert-to-debt':
           return <ConvertToDebtModal key={key} {...modal.options} />;
+
+        case 'debt-migration-wizard':
+          return <DebtMigrationWizard key={key} />;
 
         case 'confirm-delete':
           return <ConfirmDeleteModal key={key} {...modal.options} />;

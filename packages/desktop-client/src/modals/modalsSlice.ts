@@ -511,6 +511,10 @@ export type Modal =
       };
     }
   | {
+      name: 'debt-migration-wizard';
+      options?: Record<string, never>;
+    }
+  | {
       name: 'confirm-delete';
       options: {
         message: string;

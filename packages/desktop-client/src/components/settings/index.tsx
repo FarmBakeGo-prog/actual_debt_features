@@ -17,6 +17,7 @@ import { AuthSettings } from './AuthSettings';
 import { Backups } from './Backups';
 import { BudgetTypeSettings } from './BudgetTypeSettings';
 import { CurrencySettings } from './Currency';
+import { DebtTrackingSettings } from './DebtTracking';
 import { EncryptionSettings } from './Encryption';
 import { ExperimentalFeatures } from './Experimental';
 import { ExportBudget } from './Export';
@@ -249,6 +250,7 @@ export function Settings() {
         <AuthSettings />
         <EncryptionSettings />
         <BudgetTypeSettings />
+        <DebtTrackingSettings />
         {isElectron() && <Backups />}
         <ExportBudget />
         <AdvancedToggle>

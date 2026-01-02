@@ -81,6 +81,8 @@ export type LocalPrefs = Partial<{
   'budget.startMonth': string;
   'flags.updateNotificationShownForVersion': string;
   'flags.legacyDebtPromptShown': boolean;
+  'flags.debtTrackingEnabled': boolean;
+  'flags.debtTrackingDismissed': boolean;
   'schedules.showCompleted': boolean;
   reportsViewLegend: boolean;
   reportsViewSummary: boolean;

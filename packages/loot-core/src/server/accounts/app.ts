@@ -59,6 +59,7 @@ export type AccountHandlers = {
   'account-move': typeof moveAccount;
   'account-convert-to-debt': typeof convertToDebtAccount;
   'debt-detect-accounts': typeof detectDebtAccountsHandler;
+  'debt-run-migration': typeof runDebtMigration;
   'secret-set': typeof setSecret;
   'secret-check': typeof checkSecret;
   'gocardless-poll-web-token': typeof pollGoCardlessWebToken;
@@ -744,6 +745,67 @@ async function convertToDebtAccount({
  */
 async function detectDebtAccountsHandler() {
   return await detectDebtAccounts();
+}
+
+/**
+ * Runs the debt tracking schema migration.
+ * Adds all necessary columns for debt tracking to the database.
+ * Wrapped in a transaction for automatic rollback on failure.
+ */
+async function runDebtMigration(): Promise<{ success: boolean; error?: string }> {
+  try {
+    await db.asyncTransaction(async () => {
+      // Check if columns already exist by trying to query them
+      // SQLite doesn't have IF NOT EXISTS for ALTER TABLE, so we check first
+      const tableInfo = await db.all<{ name: string }>(
+        `PRAGMA table_info(accounts)`,
+      );
+      const existingColumns = new Set(tableInfo.map(col => col.name));
+
+      // Add account debt columns if they don't exist
+      const accountColumns = [
+        { name: 'is_debt', sql: 'ALTER TABLE accounts ADD COLUMN is_debt INTEGER DEFAULT 0' },
+        { name: 'debt_original_balance', sql: 'ALTER TABLE accounts ADD COLUMN debt_original_balance INTEGER' },
+        { name: 'debt_interest_rate', sql: 'ALTER TABLE accounts ADD COLUMN debt_interest_rate REAL' },
+        { name: 'debt_minimum_payment', sql: 'ALTER TABLE accounts ADD COLUMN debt_minimum_payment INTEGER' },
+        { name: 'debt_type', sql: 'ALTER TABLE accounts ADD COLUMN debt_type TEXT' },
+        { name: 'interest_scheme', sql: "ALTER TABLE accounts ADD COLUMN interest_scheme TEXT DEFAULT 'compound_monthly'" },
+        { name: 'interest_posting_day', sql: 'ALTER TABLE accounts ADD COLUMN interest_posting_day INTEGER' },
+        { name: 'apr', sql: 'ALTER TABLE accounts ADD COLUMN apr REAL' },
+        { name: 'compounding_frequency', sql: "ALTER TABLE accounts ADD COLUMN compounding_frequency TEXT DEFAULT 'monthly'" },
+        { name: 'apr_last_updated', sql: 'ALTER TABLE accounts ADD COLUMN apr_last_updated TEXT' },
+      ];
+
+      for (const col of accountColumns) {
+        if (!existingColumns.has(col.name)) {
+          await db.execQuery(col.sql);
+        }
+      }
+
+      // Check transaction columns
+      const txnTableInfo = await db.all<{ name: string }>(
+        `PRAGMA table_info(transactions)`,
+      );
+      const existingTxnColumns = new Set(txnTableInfo.map(col => col.name));
+
+      const transactionColumns = [
+        { name: 'principal_amount', sql: 'ALTER TABLE transactions ADD COLUMN principal_amount INTEGER' },
+        { name: 'interest_amount', sql: 'ALTER TABLE transactions ADD COLUMN interest_amount INTEGER' },
+        { name: 'fee_amount', sql: 'ALTER TABLE transactions ADD COLUMN fee_amount INTEGER' },
+      ];
+
+      for (const col of transactionColumns) {
+        if (!existingTxnColumns.has(col.name)) {
+          await db.execQuery(col.sql);
+        }
+      }
+    });
+
+    return { success: true };
+  } catch (e) {
+    console.error('Debt migration failed:', e);
+    return { success: false, error: String(e) };
+  }
 }
 
 async function closeAccount({
