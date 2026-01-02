@@ -50,6 +50,7 @@ export type AccountHandlers = {
   'account-close': typeof closeAccount;
   'account-reopen': typeof reopenAccount;
   'account-move': typeof moveAccount;
+  'account-convert-to-debt': typeof convertToDebtAccount;
   'secret-set': typeof setSecret;
   'secret-check': typeof checkSecret;
   'gocardless-poll-web-token': typeof pollGoCardlessWebToken;
@@ -451,6 +452,121 @@ async function createAccount({
 //     posts_transaction: 1,
 //   });
 // }
+
+/**
+ * Converts an existing account into a debt account with interest tracking.
+ * This is the main handler for the debt conversion flow.
+ *
+ * @param id - The account ID to convert
+ * @param debtType - Type of debt (credit_card, auto_loan, etc.)
+ * @param apr - Annual Percentage Rate
+ * @param principalCategoryId - Category for principal payments (optional, will create if not provided)
+ * @param interestCategoryId - Category for interest charges (optional, will create if not provided)
+ * @param interestScheme - How interest is calculated
+ * @param compoundingFrequency - How often interest compounds
+ * @param interestPostingDay - Day of month interest is posted (1-31, null for last day)
+ * @param categorizeUncategorized - Whether to categorize uncategorized transactions
+ * @param uncategorizedCategory - Category to assign to uncategorized transactions
+ */
+async function convertToDebtAccount({
+  id,
+  debtType,
+  apr,
+  principalCategoryId,
+  interestCategoryId,
+  interestScheme = 'compound_monthly',
+  compoundingFrequency = 'monthly',
+  interestPostingDay,
+  categorizeUncategorized = false,
+  uncategorizedCategory,
+}: {
+  id: AccountEntity['id'];
+  debtType: string;
+  apr: number;
+  principalCategoryId?: CategoryEntity['id'];
+  interestCategoryId?: CategoryEntity['id'];
+  interestScheme?: string;
+  compoundingFrequency?: string;
+  interestPostingDay?: number | null;
+  categorizeUncategorized?: boolean;
+  uncategorizedCategory?: CategoryEntity['id'];
+}): Promise<{
+  success: boolean;
+  principalCategoryId: string;
+  interestCategoryId: string;
+}> {
+  return withUndo(async () => {
+    // Ensure the account exists and get current state
+    const account = await db.first<db.DbAccount>(
+      'SELECT * FROM accounts WHERE id = ? AND tombstone = 0',
+      [id],
+    );
+
+    if (!account) {
+      throw new PostError('Account not found');
+    }
+
+    if (account.is_debt === 1) {
+      throw new PostError('Account is already a debt account');
+    }
+
+    if (account.offbudget === 1) {
+      throw new PostError(
+        'Cannot convert off-budget account to debt. Debt accounts must be on-budget.',
+      );
+    }
+
+    // Import ensureDebtCategories from budget app
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { ensureDebtCategories } = await import('../budget/app');
+
+    // Ensure debt categories exist or create them
+    const debtCategories = await ensureDebtCategories();
+    const finalPrincipalCategoryId =
+      principalCategoryId ?? debtCategories.principalCategoryId;
+    const finalInterestCategoryId =
+      interestCategoryId ?? debtCategories.interestCategoryId;
+
+    // Update the account to be a debt account
+    await db.update('accounts', {
+      id,
+      is_debt: 1,
+      offbudget: 0, // Ensure on-budget
+      debt_type: debtType,
+      apr,
+      interest_scheme: interestScheme,
+      compounding_frequency: compoundingFrequency,
+      interest_posting_day: interestPostingDay,
+      apr_last_updated: monthUtils.currentDay(),
+    });
+
+    // Categorize uncategorized transactions if requested
+    if (categorizeUncategorized && uncategorizedCategory) {
+      const uncategorizedTransactions = await db.all<
+        Pick<db.DbTransaction, 'id'>
+      >(
+        'SELECT id FROM transactions WHERE acct = ? AND category IS NULL AND tombstone = 0',
+        [id],
+      );
+
+      for (const transaction of uncategorizedTransactions) {
+        await db.updateTransaction({
+          id: transaction.id,
+          category: uncategorizedCategory,
+        });
+      }
+    }
+
+    // Note: Interest schedule creation will be handled by Step 8
+    // For now, we've set up the account with all necessary metadata
+
+    return {
+      success: true,
+      principalCategoryId: finalPrincipalCategoryId,
+      interestCategoryId: finalInterestCategoryId,
+    };
+  });
+}
 
 async function closeAccount({
   id,
@@ -1317,6 +1433,7 @@ app.method('account-create', mutator(undoable(createAccount)));
 app.method('account-close', mutator(closeAccount));
 app.method('account-reopen', mutator(undoable(reopenAccount)));
 app.method('account-move', mutator(undoable(moveAccount)));
+app.method('account-convert-to-debt', mutator(undoable(convertToDebtAccount)));
 app.method('secret-set', setSecret);
 app.method('secret-check', checkSecret);
 app.method('gocardless-poll-web-token', pollGoCardlessWebToken);
