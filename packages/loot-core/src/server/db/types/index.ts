@@ -26,6 +26,13 @@ export type DbAccount = {
   debt_original_balance?: number | null;
   debt_interest_rate?: number | null;
   debt_minimum_payment?: number | null;
+  debt_type?: string | null;
+  apr?: number | null;
+  interest_scheme?: string | null;
+  compounding_frequency?: string | null;
+  interest_posting_day?: number | null;
+  apr_last_updated?: string | null;
+  last_reconciled?: string | null;
 };
 
 export type DbBank = {

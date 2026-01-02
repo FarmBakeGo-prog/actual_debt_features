@@ -505,6 +505,9 @@ export type Modal =
       };
     }
   | {
+      name: 'convert-to-debt';
+    }
+  | {
       name: 'confirm-delete';
       options: {
         message: string;

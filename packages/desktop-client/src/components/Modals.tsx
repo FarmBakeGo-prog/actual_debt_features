@@ -19,6 +19,7 @@ import { ConfirmCategoryDeleteModal } from './modals/ConfirmCategoryDeleteModal'
 import { ConfirmDeleteModal } from './modals/ConfirmDeleteModal';
 import { ConfirmTransactionEditModal } from './modals/ConfirmTransactionEditModal';
 import { ConfirmUnlinkAccountModal } from './modals/ConfirmUnlinkAccountModal';
+import { ConvertToDebtModal } from './modals/ConvertToDebtModal';
 import { ConvertToScheduleModal } from './modals/ConvertToScheduleModal';
 import { CoverModal } from './modals/CoverModal';
 import { CreateAccountModal } from './modals/CreateAccountModal';
@@ -144,6 +145,9 @@ export function Modals() {
 
         case 'convert-to-schedule':
           return <ConvertToScheduleModal key={key} {...modal.options} />;
+
+        case 'convert-to-debt':
+          return <ConvertToDebtModal key={key} />;
 
         case 'confirm-delete':
           return <ConfirmDeleteModal key={key} {...modal.options} />;

@@ -13,7 +13,10 @@ import {
   SvgDotsHorizontalTriple,
   SvgLockOpen,
 } from '@actual-app/components/icons/v1';
-import { SvgNotesPaper } from '@actual-app/components/icons/v2';
+import {
+  SvgNotesPaper,
+  SvgRefreshArrow,
+} from '@actual-app/components/icons/v2';
 import { Menu } from '@actual-app/components/menu';
 import { Popover } from '@actual-app/components/popover';
 import { styles } from '@actual-app/components/styles';
@@ -34,7 +37,11 @@ import { useAccount } from '@desktop-client/hooks/useAccount';
 import { useAccounts } from '@desktop-client/hooks/useAccounts';
 import { useNotes } from '@desktop-client/hooks/useNotes';
 import { useSyncedPref } from '@desktop-client/hooks/useSyncedPref';
-import { type Modal as ModalType } from '@desktop-client/modals/modalsSlice';
+import {
+  type Modal as ModalType,
+  pushModal,
+} from '@desktop-client/modals/modalsSlice';
+import { useDispatch } from '@desktop-client/redux';
 
 type AccountMenuModalProps = Extract<
   ModalType,
@@ -214,6 +221,7 @@ function AdditionalAccountMenu({
   onToggleRunningBalance,
 }: AdditionalAccountMenuProps) {
   const { t } = useTranslation();
+  const dispatch = useDispatch();
   const triggerRef = useRef(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const itemStyle: CSSProperties = {
@@ -226,6 +234,11 @@ function AdditionalAccountMenu({
     ...(item.name === 'close' && { color: theme.errorTextMenu }),
   });
   const [showBalances] = useSyncedPref(`show-balances-${account.id}`);
+
+  const openConversionModal = () => {
+    dispatch(pushModal({ modal: { name: 'convert-to-debt' } }));
+    setMenuOpen(false);
+  };
 
   return (
     <View>
@@ -258,6 +271,16 @@ function AdditionalAccountMenu({
                     ? t('Hide running balance')
                     : t('Show running balance'),
               },
+              ...(!account.is_debt
+                ? [
+                    {
+                      name: 'convert-debt',
+                      text: t('Convert to Debt Tracking...'),
+                      icon: SvgRefreshArrow,
+                      iconSize: 15,
+                    },
+                  ]
+                : []),
               account.closed
                 ? {
                     name: 'reopen',
@@ -283,6 +306,9 @@ function AdditionalAccountMenu({
                   break;
                 case 'balance':
                   onToggleRunningBalance?.();
+                  break;
+                case 'convert-debt':
+                  openConversionModal();
                   break;
                 default:
                   throw new Error(`Unrecognized menu option: ${name}`);

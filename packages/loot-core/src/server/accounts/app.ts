@@ -37,6 +37,12 @@ import { undoable, withUndo } from '../undo';
 import * as link from './link';
 import { getStartingBalancePayee } from './payees';
 import * as bankSync from './sync';
+import { detectDebtAccounts } from './debt-detection';
+import {
+  setupInterestSchedule,
+  deleteInterestSchedule,
+} from './interest-automation';
+import { ensureDebtCategories } from '../budget/app';
 
 export type AccountHandlers = {
   'account-update': typeof updateAccount;
@@ -51,6 +57,7 @@ export type AccountHandlers = {
   'account-reopen': typeof reopenAccount;
   'account-move': typeof moveAccount;
   'account-convert-to-debt': typeof convertToDebtAccount;
+  'debt-detect-accounts': typeof detectDebtAccountsHandler;
   'secret-set': typeof setSecret;
   'secret-check': typeof checkSecret;
   'gocardless-poll-web-token': typeof pollGoCardlessWebToken;
@@ -74,8 +81,25 @@ async function updateAccount({
   last_reconciled,
   offbudget,
   is_debt,
+  debt_type,
+  apr,
+  interest_scheme,
+  compounding_frequency,
+  interest_posting_day,
 }: Pick<AccountEntity, 'id' | 'name'> &
-  Partial<Pick<AccountEntity, 'last_reconciled' | 'offbudget' | 'is_debt'>>) {
+  Partial<
+    Pick<
+      AccountEntity,
+      | 'last_reconciled'
+      | 'offbudget'
+      | 'is_debt'
+      | 'debt_type'
+      | 'apr'
+      | 'interest_scheme'
+      | 'compounding_frequency'
+      | 'interest_posting_day'
+    >
+  >) {
   // VALIDATION: Debt accounts must be on-budget (Layer 1: Database)
   if (is_debt === 1 && offbudget === 1) {
     throw new PostError(
@@ -83,13 +107,86 @@ async function updateAccount({
     );
   }
 
-  await db.update('accounts', {
+  // Get current account state to compare APR changes
+  const currentAccount = await db.first<db.DbAccount>(
+    'SELECT * FROM accounts WHERE id = ?',
+    [id],
+  );
+
+  const updateData: Partial<db.DbAccount> = {
     id,
     name,
-    ...(last_reconciled && { last_reconciled }),
-    ...(offbudget !== undefined && { offbudget }),
-    ...(is_debt !== undefined && { is_debt }),
-  });
+  };
+
+  if (last_reconciled !== undefined) {
+    updateData.last_reconciled = last_reconciled;
+  }
+  if (offbudget !== undefined) {
+    updateData.offbudget = offbudget;
+  }
+  if (is_debt !== undefined) {
+    updateData.is_debt = is_debt;
+  }
+  if (debt_type !== undefined) {
+    updateData.debt_type = debt_type;
+  }
+  if (apr !== undefined) {
+    updateData.apr = apr;
+    updateData.apr_last_updated = monthUtils.currentDay();
+  }
+  if (interest_scheme !== undefined) {
+    updateData.interest_scheme = interest_scheme;
+  }
+  if (compounding_frequency !== undefined) {
+    updateData.compounding_frequency = compounding_frequency;
+  }
+  if (interest_posting_day !== undefined) {
+    updateData.interest_posting_day = interest_posting_day;
+  }
+
+  await db.update('accounts', updateData);
+
+  // Update interest schedule if APR or interest-related settings changed
+  const aprChanged = apr !== undefined && apr !== currentAccount?.apr;
+  const schemeChanged =
+    interest_scheme !== undefined &&
+    interest_scheme !== currentAccount?.interest_scheme;
+  const frequencyChanged =
+    compounding_frequency !== undefined &&
+    compounding_frequency !== currentAccount?.compounding_frequency;
+  const postingDayChanged =
+    interest_posting_day !== undefined &&
+    interest_posting_day !== currentAccount?.interest_posting_day;
+
+  if (
+    currentAccount?.is_debt === 1 &&
+    (aprChanged || schemeChanged || frequencyChanged || postingDayChanged)
+  ) {
+    const finalApr = apr ?? currentAccount.apr;
+    const finalScheme = interest_scheme ?? currentAccount.interest_scheme;
+    const finalFrequency =
+      compounding_frequency ?? currentAccount.compounding_frequency;
+    const finalPostingDay =
+      interest_posting_day ?? currentAccount.interest_posting_day;
+
+    if (finalApr && finalApr > 0 && finalScheme && finalFrequency) {
+      // Ensure debt categories exist to get the interest category ID
+      const { interestCategoryId } = await ensureDebtCategories();
+
+      await setupInterestSchedule({
+        accountId: id,
+        apr: finalApr,
+        interestScheme: finalScheme,
+        compoundingFrequency: finalFrequency,
+        interestPostingDay: finalPostingDay ?? null,
+        interestCategoryId,
+      });
+    } else if (finalApr === 0 || finalApr === null) {
+      // Remove interest schedule if APR is set to 0 or null
+      await deleteInterestSchedule(id);
+    }
+  }
+
   return {};
 }
 
@@ -408,14 +505,26 @@ async function createAccount({
     });
   }
 
-  // TODO: Set up scheduled transactions for debt accounts
-  // This requires more complex schedule/rule setup that needs additional implementation
-  // if (isDebt && debtInterestRate != null) {
-  //   await setupDebtSchedules({
-  //     accountId: id,
-  //     interestRate: debtInterestRate,
-  //   });
-  // }
+  // Set up interest schedule for debt accounts with APR configured
+  if (
+    isDebt &&
+    apr != null &&
+    apr > 0 &&
+    interestScheme &&
+    compoundingFrequency
+  ) {
+    // Ensure debt categories exist to get the interest category ID
+    const { interestCategoryId } = await ensureDebtCategories();
+
+    await setupInterestSchedule({
+      accountId: id,
+      apr,
+      interestScheme,
+      compoundingFrequency,
+      interestPostingDay: interestPostingDay ?? null,
+      interestCategoryId,
+    });
+  }
 
   return id;
 }
@@ -557,8 +666,17 @@ async function convertToDebtAccount({
       }
     }
 
-    // Note: Interest schedule creation will be handled by Step 8
-    // For now, we've set up the account with all necessary metadata
+    // Set up interest schedule for automatic interest accrual
+    if (apr && apr > 0 && interestScheme && compoundingFrequency) {
+      await setupInterestSchedule({
+        accountId: id,
+        apr,
+        interestScheme,
+        compoundingFrequency,
+        interestPostingDay: interestPostingDay ?? null,
+        interestCategoryId: finalInterestCategoryId,
+      });
+    }
 
     return {
       success: true,
@@ -566,6 +684,14 @@ async function convertToDebtAccount({
       interestCategoryId: finalInterestCategoryId,
     };
   });
+}
+
+/**
+ * Handler for detecting potential debt accounts.
+ * Returns a list of accounts that may be debt accounts based on various heuristics.
+ */
+async function detectDebtAccountsHandler() {
+  return await detectDebtAccounts();
 }
 
 async function closeAccount({
@@ -583,6 +709,15 @@ async function closeAccount({
   // bank-sync providers. (This should not be undo-able, as it mutates the
   // remote server and the user will have to link the account again)
   await unlinkAccount({ id });
+
+  // Delete any interest schedules for debt accounts
+  const account = await db.first<db.DbAccount>(
+    'SELECT is_debt FROM accounts WHERE id = ? AND tombstone = 0',
+    [id],
+  );
+  if (account?.is_debt === 1) {
+    await deleteInterestSchedule(id);
+  }
 
   return withUndo(async () => {
     const account = await db.first<db.DbAccount>(
@@ -1434,6 +1569,7 @@ app.method('account-close', mutator(closeAccount));
 app.method('account-reopen', mutator(undoable(reopenAccount)));
 app.method('account-move', mutator(undoable(moveAccount)));
 app.method('account-convert-to-debt', mutator(undoable(convertToDebtAccount)));
+app.method('debt-detect-accounts', detectDebtAccountsHandler);
 app.method('secret-set', setSecret);
 app.method('secret-check', checkSecret);
 app.method('gocardless-poll-web-token', pollGoCardlessWebToken);
