@@ -183,6 +183,10 @@ export type DbTransaction = {
   pending?: 1 | 0 | null;
   location?: string | null;
   type?: string | null;
+  // Debt payment breakdown fields
+  principal_amount?: number | null;
+  interest_amount?: number | null;
+  fee_amount?: number | null;
 };
 
 export type DbReflectBudget = {
@@ -281,6 +285,10 @@ export type DbViewTransactionInternal = {
   cleared: DbTransaction['cleared'];
   tombstone: DbTransaction['tombstone'];
   reconciled: DbTransaction['reconciled'];
+  // Debt payment breakdown fields
+  principal_amount: DbTransaction['principal_amount'];
+  interest_amount: DbTransaction['interest_amount'];
+  fee_amount: DbTransaction['fee_amount'];
 };
 
 export type DbViewTransactionInternalAlive = DbViewTransactionInternal;

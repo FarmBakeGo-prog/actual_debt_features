@@ -196,8 +196,8 @@ export function FinancesApp() {
       }
 
       try {
-        const potentialDebts = await send('detect-debt-accounts');
-        if (potentialDebts && potentialDebts.length > 0) {
+        const potentialDebts = await send('debt-detect-accounts');
+        if (potentialDebts && 'length' in potentialDebts && potentialDebts.length > 0) {
           dispatch(
             addNotification({
               notification: {
@@ -217,7 +217,7 @@ export function FinancesApp() {
                         modal: {
                           name: 'convert-to-debt',
                           options: {
-                            accountIds: potentialDebts.map(a => a.id),
+                            accountIds: potentialDebts.map(a => a.accountId),
                           },
                         },
                       }),

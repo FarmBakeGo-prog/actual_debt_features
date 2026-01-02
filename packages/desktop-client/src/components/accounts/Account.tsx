@@ -782,7 +782,8 @@ class AccountInternal extends PureComponent<
       | 'remove-sorting'
       | 'toggle-cleared'
       | 'toggle-reconciled'
-      | 'toggle-net-worth-chart',
+      | 'toggle-net-worth-chart'
+      | 'convert-debt',
   ) => {
     const accountId = this.props.accountId!;
     const account = this.props.accounts.find(

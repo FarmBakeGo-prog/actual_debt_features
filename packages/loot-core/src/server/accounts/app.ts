@@ -39,10 +39,10 @@ import { getStartingBalancePayee } from './payees';
 import * as bankSync from './sync';
 import { detectDebtAccounts } from './debt-detection';
 // TODO: Re-enable when interest-automation uses correct DB schema
-// import {
-//   setupInterestSchedule,
-//   deleteInterestSchedule,
-// } from './interest-automation';
+import {
+  // setupInterestSchedule,
+  deleteInterestSchedule,
+} from './interest-automation';
 import { ensureDebtCategories } from '../budget/app';
 
 export type AccountHandlers = {

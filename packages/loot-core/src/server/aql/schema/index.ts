@@ -54,6 +54,10 @@ export const schema = {
     tombstone: f('boolean'),
     schedule: f('id', { ref: 'schedules' }),
     raw_synced_data: f('string'),
+    // Debt payment breakdown fields (for loan/credit card accounts)
+    principal_amount: f('integer'),
+    interest_amount: f('integer'),
+    fee_amount: f('integer'),
     // subtransactions is a special field added if the table has the
     // `splits: grouped` option
   },

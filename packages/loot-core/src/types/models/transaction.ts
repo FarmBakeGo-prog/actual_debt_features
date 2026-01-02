@@ -36,4 +36,8 @@ export type TransactionEntity = {
   } | null;
   raw_synced_data?: string | undefined;
   _ruleErrors?: string[];
+  // Debt payment breakdown fields (for loan/credit card accounts)
+  principal_amount?: IntegerAmount;
+  interest_amount?: IntegerAmount;
+  fee_amount?: IntegerAmount;
 };

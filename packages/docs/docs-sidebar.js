@@ -218,6 +218,7 @@ const sidebars = {
             'experimental/formulas',
             'experimental/pluggyai',
             'experimental/crossover-point-report',
+            'experimental/debt-tracking',
           ],
         },
         'getting-started/tips-tricks',

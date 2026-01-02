@@ -53,4 +53,12 @@ export type ImportTransactionEntity = {
     category?: string;
     notes?: string;
   }>;
+
+  /** Debt payment breakdown fields (for loan/credit card accounts) */
+  /** Principal portion of a debt payment (integer amount) */
+  principal_amount?: number;
+  /** Interest portion of a debt payment (integer amount) */
+  interest_amount?: number;
+  /** Fee portion of a debt payment (integer amount) */
+  fee_amount?: number;
 };

@@ -260,7 +260,7 @@ async function detectInterestTransactions(accountId: string): Promise<{
   }>(
     `SELECT t.amount, t.date 
      FROM transactions t
-     LEFT JOIN payees p ON t.payee = p.id
+     LEFT JOIN payees p ON t.description = p.id
      WHERE t.acct = ? AND t.tombstone = 0 AND t.amount < 0
      AND (
        ${interestKeywords.map(_ => 'LOWER(p.name) LIKE ?').join(' OR ')}

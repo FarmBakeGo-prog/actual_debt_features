@@ -147,6 +147,7 @@ type TransactionHeaderProps = {
   ascDesc: 'asc' | 'desc';
   field: string;
   account?: { is_debt?: number };
+  isDebtAccount?: boolean;
 };
 
 const TransactionHeader = memo(
@@ -162,6 +163,7 @@ const TransactionHeader = memo(
     field,
     showSelection,
     account,
+    isDebtAccount,
   }: TransactionHeaderProps) => {
     const dispatchSelected = useSelectedDispatch();
     const { t } = useTranslation();
@@ -307,6 +309,33 @@ const TransactionHeader = memo(
             alignItems="flex-end"
             marginRight={-5}
             id="balance"
+          />
+        )}
+        {isDebtAccount && (
+          <HeaderCell
+            value={t('Principal')}
+            width={90}
+            alignItems="flex-end"
+            marginRight={-5}
+            id="principal"
+          />
+        )}
+        {isDebtAccount && (
+          <HeaderCell
+            value={t('Interest')}
+            width={90}
+            alignItems="flex-end"
+            marginRight={-5}
+            id="interest"
+          />
+        )}
+        {isDebtAccount && (
+          <HeaderCell
+            value={t('Fee')}
+            width={70}
+            alignItems="flex-end"
+            marginRight={-5}
+            id="fee"
           />
         )}
         {showCleared && (
@@ -878,6 +907,7 @@ type TransactionProps = {
   showSelection?: boolean;
   allowSplitTransaction?: boolean;
   showHiddenCategories?: boolean;
+  isDebtAccount?: boolean;
 };
 
 const Transaction = memo(function Transaction({
@@ -925,6 +955,7 @@ const Transaction = memo(function Transaction({
   showSelection,
   allowSplitTransaction,
   showHiddenCategories,
+  isDebtAccount,
 }: TransactionProps) {
   const { t } = useTranslation();
 
@@ -1677,6 +1708,61 @@ const Transaction = memo(function Transaction({
         />
       )}
 
+      {isDebtAccount && (
+        <Cell
+          /* Principal amount for debt transactions */
+          name="principal"
+          value={
+            transaction.principal_amount != null && !isChild
+              ? integerToCurrency(transaction.principal_amount)
+              : ''
+          }
+          valueStyle={{
+            color: theme.noticeTextLight,
+          }}
+          style={{ ...styles.tnum, ...amountStyle }}
+          width={90}
+          textAlign="right"
+          privacyFilter
+        />
+      )}
+      {isDebtAccount && (
+        <Cell
+          /* Interest amount for debt transactions */
+          name="interest"
+          value={
+            transaction.interest_amount != null && !isChild
+              ? integerToCurrency(transaction.interest_amount)
+              : ''
+          }
+          valueStyle={{
+            color: theme.errorText,
+          }}
+          style={{ ...styles.tnum, ...amountStyle }}
+          width={90}
+          textAlign="right"
+          privacyFilter
+        />
+      )}
+      {isDebtAccount && (
+        <Cell
+          /* Fee amount for debt transactions */
+          name="fee"
+          value={
+            transaction.fee_amount != null && !isChild
+              ? integerToCurrency(transaction.fee_amount)
+              : ''
+          }
+          valueStyle={{
+            color: theme.errorText,
+          }}
+          style={{ ...styles.tnum, ...amountStyle }}
+          width={70}
+          textAlign="right"
+          privacyFilter
+        />
+      )}
+
       {showCleared && (
         <StatusCell
           /* Icon field for all transactions */
@@ -2203,6 +2289,7 @@ function TransactionTableInner({
         showSelection={showSelection}
         allowSplitTransaction={allowSplitTransaction}
         showHiddenCategories={showHiddenCategories}
+        isDebtAccount={props.account?.is_debt === 1}
       />
     );
   };
@@ -2229,6 +2316,7 @@ function TransactionTableInner({
           field={props.sortField}
           showSelection={props.showSelection}
           account={props.account}
+          isDebtAccount={props.account?.is_debt === 1}
         />
 
         {props.isAdding && (

@@ -22,4 +22,9 @@ ALTER TABLE accounts ADD COLUMN compounding_frequency TEXT DEFAULT 'monthly';
 -- For tracking when rates change (variable rate loans)
 ALTER TABLE accounts ADD COLUMN apr_last_updated TEXT;
 
+-- Transaction-level debt breakdown fields (for loan payment display like banks show)
+ALTER TABLE transactions ADD COLUMN principal_amount INTEGER;
+ALTER TABLE transactions ADD COLUMN interest_amount INTEGER;
+ALTER TABLE transactions ADD COLUMN fee_amount INTEGER;
+
 COMMIT;

@@ -63,7 +63,7 @@ function useAddBudgetAccountOptions() {
 // Account type options for the dropdown
 type AccountTypeOption = 'checking' | 'savings' | 'credit_card' | 'auto_loan' | 'student_loan' | 'mortgage' | 'personal_loan' | 'line_of_credit';
 
-function useAccountTypeOptions() {
+function useAccountTypeOptions(): Array<[string, string]> {
   const { t } = useTranslation();
   return [
     ['checking', t('Checking/Savings')],
@@ -73,7 +73,7 @@ function useAccountTypeOptions() {
     ['mortgage', t('Mortgage')],
     ['personal_loan', t('Personal Loan')],
     ['line_of_credit', t('Line of Credit')],
-  ] as const;
+  ];
 }
 
 // Check if an account type is a debt type
