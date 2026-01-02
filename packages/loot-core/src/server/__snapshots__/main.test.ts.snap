@@ -10,15 +10,18 @@ exports[`Accounts > Transfers are properly updated 1`] = `
     "date": 20170101,
     "description": "transfer-two",
     "error": null,
+    "fee_amount": null,
     "financial_id": null,
     "id": "test-transfer",
     "imported_description": null,
+    "interest_amount": null,
     "isChild": 0,
     "isParent": 0,
     "location": null,
     "notes": null,
     "parent_id": null,
     "pending": 0,
+    "principal_amount": null,
     "raw_synced_data": null,
     "reconciled": 0,
     "schedule": null,
@@ -36,15 +39,18 @@ exports[`Accounts > Transfers are properly updated 1`] = `
     "date": 20170101,
     "description": "transfer-one",
     "error": null,
+    "fee_amount": null,
     "financial_id": null,
     "id": "id2",
     "imported_description": null,
+    "interest_amount": null,
     "isChild": 0,
     "isParent": 0,
     "location": null,
     "notes": null,
     "parent_id": null,
     "pending": 0,
+    "principal_amount": null,
     "raw_synced_data": null,
     "reconciled": 0,
     "schedule": null,
@@ -72,11 +78,11 @@ exports[`Accounts > Transfers are properly updated 2`] = `
 +     "date": 20170103,
 +     "description": "transfer-three",
       "error": null,
+      "fee_amount": null,
       "financial_id": null,
       "id": "test-transfer",
       "imported_description": null,
-      "isChild": 0,
-@@ -24,15 +24,15 @@
+@@ -27,15 +27,15 @@
       "tombstone": 0,
       "transferred_id": "id2",
       "type": null,
@@ -91,16 +97,16 @@ exports[`Accounts > Transfers are properly updated 2`] = `
 +     "date": 20170103,
       "description": "transfer-one",
       "error": null,
+      "fee_amount": null,
       "financial_id": null,
-      "id": "id2",
-      "imported_description": null,"
+      "id": "id2","
 `;
 
 exports[`Accounts > Transfers are properly updated 3`] = `
 "- First value
 + Second value
 
-@@ -19,12 +19,12 @@
+@@ -22,12 +22,12 @@
       "raw_synced_data": null,
       "reconciled": 0,
       "schedule": null,
@@ -115,7 +121,7 @@ exports[`Accounts > Transfers are properly updated 3`] = `
     Object {
       "acct": "three",
       "amount": -5000,
-@@ -45,10 +45,10 @@
+@@ -51,10 +51,10 @@
       "raw_synced_data": null,
       "reconciled": 0,
       "schedule": null,

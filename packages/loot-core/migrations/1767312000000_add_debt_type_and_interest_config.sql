@@ -1,5 +1,3 @@
-BEGIN TRANSACTION;
-
 -- Add debt type field (credit_card, auto_loan, student_loan, mortgage, personal_loan, line_of_credit)
 ALTER TABLE accounts ADD COLUMN debt_type TEXT;
 
@@ -26,5 +24,3 @@ ALTER TABLE accounts ADD COLUMN apr_last_updated TEXT;
 ALTER TABLE transactions ADD COLUMN principal_amount INTEGER;
 ALTER TABLE transactions ADD COLUMN interest_amount INTEGER;
 ALTER TABLE transactions ADD COLUMN fee_amount INTEGER;
-
-COMMIT;

@@ -596,6 +596,7 @@ export function TransactionList({
       ref={tableRef}
       transactions={allTransactions}
       loadMoreTransactions={loadMoreTransactions}
+      account={account}
       accounts={accounts}
       categoryGroups={categoryGroups}
       payees={payees}

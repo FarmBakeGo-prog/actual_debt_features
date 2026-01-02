@@ -835,7 +835,12 @@ function AccountMenu({
 
         // Convert to debt option - only show if not already a debt account and not closed
         ...(!account.is_debt && !account.closed
-          ? [{ name: 'convert-debt', text: t('Convert to Debt Account...') } as const]
+          ? [
+              {
+                name: 'convert-debt',
+                text: t('Convert to Debt Account...'),
+              } as const,
+            ]
           : []),
 
         ...(account.closed

@@ -187,7 +187,10 @@ async function updateAccount({
     //   // Remove interest schedule if APR is set to 0 or null
     //   await deleteInterestSchedule(id);
     // }
-    void finalApr; void finalScheme; void finalFrequency; void finalPostingDay;
+    void finalApr;
+    void finalScheme;
+    void finalFrequency;
+    void finalPostingDay;
   }
 
   return {};
@@ -273,7 +276,7 @@ async function linkGoCardlessAccount({
       name: account.name,
       official_name: account.official_name,
       bank: bank.id,
-      offbudget: isDebt ? 0 : (offBudget ? 1 : 0),
+      offbudget: isDebt ? 0 : offBudget ? 1 : 0,
       account_sync_source: 'goCardless',
       is_debt: isDebt ? 1 : 0,
       debt_type: isDebt ? debtType : null,
@@ -351,7 +354,7 @@ async function linkSimpleFinAccount({
       name: externalAccount.name,
       official_name: externalAccount.name,
       bank: bank.id,
-      offbudget: isDebt ? 0 : (offBudget ? 1 : 0),
+      offbudget: isDebt ? 0 : offBudget ? 1 : 0,
       account_sync_source: 'simpleFin',
       is_debt: isDebt ? 1 : 0,
       debt_type: isDebt ? debtType : null,
@@ -429,7 +432,7 @@ async function linkPluggyAiAccount({
       name: externalAccount.name,
       official_name: externalAccount.name,
       bank: bank.id,
-      offbudget: isDebt ? 0 : (offBudget ? 1 : 0),
+      offbudget: isDebt ? 0 : offBudget ? 1 : 0,
       account_sync_source: 'pluggyai',
       is_debt: isDebt ? 1 : 0,
       debt_type: isDebt ? debtType : null,

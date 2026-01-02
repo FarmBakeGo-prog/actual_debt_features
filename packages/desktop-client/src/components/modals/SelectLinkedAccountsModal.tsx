@@ -61,7 +61,15 @@ function useAddBudgetAccountOptions() {
 }
 
 // Account type options for the dropdown
-type AccountTypeOption = 'checking' | 'savings' | 'credit_card' | 'auto_loan' | 'student_loan' | 'mortgage' | 'personal_loan' | 'line_of_credit';
+type AccountTypeOption =
+  | 'checking'
+  | 'savings'
+  | 'credit_card'
+  | 'auto_loan'
+  | 'student_loan'
+  | 'mortgage'
+  | 'personal_loan'
+  | 'line_of_credit';
 
 function useAccountTypeOptions(): Array<[string, string]> {
   const { t } = useTranslation();
@@ -158,7 +166,9 @@ export function SelectLinkedAccountsModal({
     },
   );
   // Track account type selection per external account
-  const [accountTypes, setAccountTypes] = useState<Record<string, AccountTypeOption>>({});
+  const [accountTypes, setAccountTypes] = useState<
+    Record<string, AccountTypeOption>
+  >({});
   const { addOnBudgetAccountOption, addOffBudgetAccountOption } =
     useAddBudgetAccountOptions();
 
@@ -282,7 +292,10 @@ export function SelectLinkedAccountsModal({
     });
   }
 
-  function onSetAccountType(externalAccountId: string, accountType: AccountTypeOption) {
+  function onSetAccountType(
+    externalAccountId: string,
+    accountType: AccountTypeOption,
+  ) {
     setAccountTypes(prev => ({
       ...prev,
       [externalAccountId]: accountType,
@@ -473,7 +486,10 @@ type SharedAccountRowProps = {
     localAccountId: string | null | undefined,
   ) => void;
   accountType: AccountTypeOption;
-  onSetAccountType: (externalAccountId: string, accountType: AccountTypeOption) => void;
+  onSetAccountType: (
+    externalAccountId: string,
+    accountType: AccountTypeOption,
+  ) => void;
 };
 
 function getAvailableAccountOptions(
@@ -556,7 +572,12 @@ function TableRow({
       <Field width={130}>
         <Select
           value={accountType}
-          onChange={(value: string) => onSetAccountType(externalAccount.account_id, value as AccountTypeOption)}
+          onChange={(value: string) =>
+            onSetAccountType(
+              externalAccount.account_id,
+              value as AccountTypeOption,
+            )
+          }
           options={accountTypeOptions}
           style={{ width: '100%' }}
         />
@@ -712,7 +733,12 @@ function AccountCard({
         </Text>
         <Select
           value={accountType}
-          onChange={(value: string) => onSetAccountType(externalAccount.account_id, value as AccountTypeOption)}
+          onChange={(value: string) =>
+            onSetAccountType(
+              externalAccount.account_id,
+              value as AccountTypeOption,
+            )
+          }
           options={accountTypeOptions}
           style={{ flex: 1 }}
         />

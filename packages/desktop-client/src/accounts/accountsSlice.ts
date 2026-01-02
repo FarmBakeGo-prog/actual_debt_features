@@ -285,7 +285,14 @@ type LinkAccountPayload = {
 export const linkAccount = createAppAsyncThunk(
   `${sliceName}/linkAccount`,
   async (
-    { requisitionId, account, upgradingId, offBudget, isDebt, debtType }: LinkAccountPayload,
+    {
+      requisitionId,
+      account,
+      upgradingId,
+      offBudget,
+      isDebt,
+      debtType,
+    }: LinkAccountPayload,
     { dispatch },
   ) => {
     await send('gocardless-accounts-link', {
@@ -312,7 +319,13 @@ type LinkAccountSimpleFinPayload = {
 export const linkAccountSimpleFin = createAppAsyncThunk(
   `${sliceName}/linkAccountSimpleFin`,
   async (
-    { externalAccount, upgradingId, offBudget, isDebt, debtType }: LinkAccountSimpleFinPayload,
+    {
+      externalAccount,
+      upgradingId,
+      offBudget,
+      isDebt,
+      debtType,
+    }: LinkAccountSimpleFinPayload,
     { dispatch },
   ) => {
     await send('simplefin-accounts-link', {
@@ -338,7 +351,13 @@ type LinkAccountPluggyAiPayload = {
 export const linkAccountPluggyAi = createAppAsyncThunk(
   `${sliceName}/linkAccountPluggyAi`,
   async (
-    { externalAccount, upgradingId, offBudget, isDebt, debtType }: LinkAccountPluggyAiPayload,
+    {
+      externalAccount,
+      upgradingId,
+      offBudget,
+      isDebt,
+      debtType,
+    }: LinkAccountPluggyAiPayload,
     { dispatch },
   ) => {
     await send('pluggyai-accounts-link', {

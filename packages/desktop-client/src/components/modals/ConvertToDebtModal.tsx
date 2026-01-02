@@ -50,7 +50,9 @@ type ConvertToDebtModalProps = {
   accountIds?: string[];
 };
 
-export function ConvertToDebtModal({ accountIds }: ConvertToDebtModalProps = {}) {
+export function ConvertToDebtModal({
+  accountIds,
+}: ConvertToDebtModalProps = {}) {
   const { t } = useTranslation();
   const dispatch = useDispatch();
   const format = useFormat();
@@ -135,7 +137,7 @@ export function ConvertToDebtModal({ accountIds }: ConvertToDebtModalProps = {})
     }
 
     loadCandidates();
-  }, []);
+  }, [accountIds]);
 
   const toggleAccountSelection = (accountId: string) => {
     const newSelection = new Set(selectedAccounts);
@@ -466,10 +468,14 @@ export function ConvertToDebtModal({ accountIds }: ConvertToDebtModalProps = {})
                 </InlineField>
 
                 {/* APR Calculator Toggle */}
-                <View style={{ marginTop: 5 }}>
+                <View style={{ marginTop: 10, marginBottom: 5 }}>
                   <Button
-                    type="button"
-                    style={{ alignSelf: 'flex-start' }}
+                    variant="bare"
+                    style={{
+                      alignSelf: 'flex-start',
+                      padding: '4px 8px',
+                      fontSize: 13,
+                    }}
                     onPress={() =>
                       updateConfig(candidate.accountId, {
                         showCalculator: !config.showCalculator,
@@ -477,13 +483,9 @@ export function ConvertToDebtModal({ accountIds }: ConvertToDebtModalProps = {})
                     }
                   >
                     {config.showCalculator ? (
-                      <Text style={{ color: theme.pageTextSubdued }}>
-                        {t('Hide APR Calculator')} ▼
-                      </Text>
+                      <Trans>▼ Hide APR Calculator</Trans>
                     ) : (
-                      <Text style={{ color: theme.pageTextSubdued }}>
-                        {t("Don't know your APR? Calculate it")} ▶
-                      </Text>
+                      <Trans>▶ Don't know your APR? Calculate it</Trans>
                     )}
                   </Button>
                 </View>
@@ -496,14 +498,14 @@ export function ConvertToDebtModal({ accountIds }: ConvertToDebtModalProps = {})
                       backgroundColor: theme.tableRowHeaderBackground,
                       borderRadius: 4,
                       gap: 10,
-                      marginTop: 5,
+                      marginBottom: 10,
+                      border: `1px solid ${theme.tableBorder}`,
                     }}
                   >
                     <Text
                       style={{
                         fontSize: 13,
                         fontWeight: 600,
-                        color: theme.pageTextSubdued,
                       }}
                     >
                       {t('Calculate APR from Statement')}
@@ -523,7 +525,7 @@ export function ConvertToDebtModal({ accountIds }: ConvertToDebtModalProps = {})
                           fontWeight: 500,
                         }}
                       >
-                        {t('⚠️ This is an approximation')}
+                        {t('⚠️ Approximation only')}
                       </Text>
                       <Text
                         style={{
@@ -533,7 +535,7 @@ export function ConvertToDebtModal({ accountIds }: ConvertToDebtModalProps = {})
                         }}
                       >
                         {t(
-                          'Banks use complex methods (amortization, daily balance, grace periods) that this calculator cannot replicate. If your bank provides a quoted APR, use that instead. This tool is only for when APR is unknown.',
+                          "Use your bank's quoted APR if available. This calculator provides a rough estimate.",
                         )}
                       </Text>
                     </View>
@@ -587,18 +589,6 @@ export function ConvertToDebtModal({ accountIds }: ConvertToDebtModalProps = {})
                         placeholder={t('e.g., 2500.00')}
                       />
                     </InlineField>
-
-                    <Text
-                      style={{
-                        fontSize: 11,
-                        color: theme.pageTextSubdued,
-                        fontStyle: 'italic',
-                      }}
-                    >
-                      {t(
-                        "Calculated APR may differ from your quoted rate due to amortization, fees, or daily balance methods. When in doubt, use your bank's quoted APR above.",
-                      )}
-                    </Text>
                   </View>
                 )}
 

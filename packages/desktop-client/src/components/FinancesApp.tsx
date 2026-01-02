@@ -7,8 +7,8 @@ import { useResponsive } from '@actual-app/components/hooks/useResponsive';
 import { theme } from '@actual-app/components/theme';
 import { View } from '@actual-app/components/view';
 
-import * as undo from 'loot-core/platform/client/undo';
 import { send } from 'loot-core/platform/client/fetch';
+import * as undo from 'loot-core/platform/client/undo';
 
 import { UserAccessPage } from './admin/UserAccess/UserAccessPage';
 import { BankSyncStatus } from './BankSyncStatus';
@@ -197,7 +197,11 @@ export function FinancesApp() {
 
       try {
         const potentialDebts = await send('debt-detect-accounts');
-        if (potentialDebts && 'length' in potentialDebts && potentialDebts.length > 0) {
+        if (
+          potentialDebts &&
+          'length' in potentialDebts &&
+          potentialDebts.length > 0
+        ) {
           dispatch(
             addNotification({
               notification: {
@@ -240,7 +244,13 @@ export function FinancesApp() {
     }
 
     checkForLegacyDebtAccounts();
-  }, [dispatch, isAccountsLoaded, legacyDebtPromptShown, setLegacyDebtPromptShown, t]);
+  }, [
+    dispatch,
+    isAccountsLoaded,
+    legacyDebtPromptShown,
+    setLegacyDebtPromptShown,
+    t,
+  ]);
 
   const scrollableRef = useRef<HTMLDivElement>(null);
 

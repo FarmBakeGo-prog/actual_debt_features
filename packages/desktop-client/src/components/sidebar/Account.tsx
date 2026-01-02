@@ -42,7 +42,10 @@ import { useDragRef } from '@desktop-client/hooks/useDragRef';
 import { useIsTestEnv } from '@desktop-client/hooks/useIsTestEnv';
 import { useNotes } from '@desktop-client/hooks/useNotes';
 import { useSyncedPref } from '@desktop-client/hooks/useSyncedPref';
-import { openAccountCloseModal, pushModal } from '@desktop-client/modals/modalsSlice';
+import {
+  openAccountCloseModal,
+  pushModal,
+} from '@desktop-client/modals/modalsSlice';
 import { useDispatch } from '@desktop-client/redux';
 import { type SheetFields, type Binding } from '@desktop-client/spreadsheet';
 

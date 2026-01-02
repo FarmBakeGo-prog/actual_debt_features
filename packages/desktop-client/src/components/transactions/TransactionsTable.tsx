@@ -2409,6 +2409,7 @@ type TableState = {
 export type TransactionTableProps = {
   transactions: readonly TransactionEntity[];
   loadMoreTransactions: () => void;
+  account?: AccountEntity;
   accounts: AccountEntity[];
   categoryGroups: CategoryGroupEntity[];
   payees: PayeeEntity[];
