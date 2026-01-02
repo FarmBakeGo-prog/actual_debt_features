@@ -448,6 +448,93 @@ async function deleteCategoryGroup({
   });
 }
 
+/**
+ * Ensures that debt-related categories exist in the budget.
+ * Creates a "Debt Payments" category group with "Debt Principal" and "Debt Interest"
+ * categories if they don't already exist. This function is idempotent.
+ *
+ * @returns Object containing the IDs of the debt category group and categories
+ */
+export async function ensureDebtCategories(): Promise<{
+  groupId: string;
+  principalCategoryId: string;
+  interestCategoryId: string;
+}> {
+  // Check if debt categories already exist
+  const groups = await db.getCategoriesGrouped();
+  let debtGroup = groups.find(g => g.name === 'Debt Payments');
+
+  // Create the group if it doesn't exist
+  if (!debtGroup) {
+    const groupId = await createCategoryGroup({
+      name: 'Debt Payments',
+      isIncome: false,
+      hidden: false,
+    });
+
+    // Refresh groups to get the newly created group with its categories
+    const updatedGroups = await db.getCategoriesGrouped();
+    debtGroup = updatedGroups.find(g => g.id === groupId);
+
+    if (!debtGroup) {
+      throw new Error('Failed to create Debt Payments category group');
+    }
+  }
+
+  // Check if the required categories exist
+  const categories = debtGroup.categories || [];
+  let principalCategory = categories.find(c => c.name === 'Debt Principal');
+  let interestCategory = categories.find(c => c.name === 'Debt Interest');
+
+  // Create Debt Principal category if it doesn't exist
+  if (!principalCategory) {
+    const principalId = await createCategory({
+      name: 'Debt Principal',
+      groupId: debtGroup.id,
+      isIncome: false,
+      hidden: false,
+    });
+
+    // Refresh to get the full category object
+    const updatedGroups = await db.getCategoriesGrouped();
+    const updatedDebtGroup = updatedGroups.find(g => g.id === debtGroup.id);
+    principalCategory = updatedDebtGroup?.categories?.find(
+      c => c.id === principalId,
+    );
+
+    if (!principalCategory) {
+      throw new Error('Failed to create Debt Principal category');
+    }
+  }
+
+  // Create Debt Interest category if it doesn't exist
+  if (!interestCategory) {
+    const interestId = await createCategory({
+      name: 'Debt Interest',
+      groupId: debtGroup.id,
+      isIncome: false,
+      hidden: false,
+    });
+
+    // Refresh to get the full category object
+    const updatedGroups = await db.getCategoriesGrouped();
+    const updatedDebtGroup = updatedGroups.find(g => g.id === debtGroup.id);
+    interestCategory = updatedDebtGroup?.categories?.find(
+      c => c.id === interestId,
+    );
+
+    if (!interestCategory) {
+      throw new Error('Failed to create Debt Interest category');
+    }
+  }
+
+  return {
+    groupId: debtGroup.id,
+    principalCategoryId: principalCategory.id,
+    interestCategoryId: interestCategory.id,
+  };
+}
+
 async function isCategoryTransferRequired({
   id,
 }: {
