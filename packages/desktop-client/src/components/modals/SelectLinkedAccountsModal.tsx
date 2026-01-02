@@ -3,6 +3,7 @@ import { useTranslation, Trans } from 'react-i18next';
 
 import { Button } from '@actual-app/components/button';
 import { useResponsive } from '@actual-app/components/hooks/useResponsive';
+import { Select } from '@actual-app/components/select';
 import { SpaceBetween } from '@actual-app/components/space-between';
 import { Text } from '@actual-app/components/text';
 import { theme } from '@actual-app/components/theme';
@@ -57,6 +58,35 @@ function useAddBudgetAccountOptions() {
   };
 
   return { addOnBudgetAccountOption, addOffBudgetAccountOption };
+}
+
+// Account type options for the dropdown
+type AccountTypeOption = 'checking' | 'savings' | 'credit_card' | 'auto_loan' | 'student_loan' | 'mortgage' | 'personal_loan' | 'line_of_credit';
+
+function useAccountTypeOptions() {
+  const { t } = useTranslation();
+  return [
+    ['checking', t('Checking/Savings')],
+    ['credit_card', t('Credit Card')],
+    ['auto_loan', t('Auto Loan')],
+    ['student_loan', t('Student Loan')],
+    ['mortgage', t('Mortgage')],
+    ['personal_loan', t('Personal Loan')],
+    ['line_of_credit', t('Line of Credit')],
+  ] as const;
+}
+
+// Check if an account type is a debt type
+function isDebtAccountType(accountType: AccountTypeOption): boolean {
+  return accountType !== 'checking' && accountType !== 'savings';
+}
+
+// Map account type to debt_type field value
+function getDebtType(accountType: AccountTypeOption): string | undefined {
+  if (accountType === 'checking' || accountType === 'savings') {
+    return undefined;
+  }
+  return accountType;
 }
 
 export type SelectLinkedAccountsModalProps =
@@ -127,6 +157,8 @@ export function SelectLinkedAccountsModal({
       );
     },
   );
+  // Track account type selection per external account
+  const [accountTypes, setAccountTypes] = useState<Record<string, AccountTypeOption>>({});
   const { addOnBudgetAccountOption, addOffBudgetAccountOption } =
     useAddBudgetAccountOptions();
 
@@ -149,6 +181,11 @@ export function SelectLinkedAccountsModal({
           );
         const offBudget = chosenLocalAccountId === addOffBudgetAccountOption.id;
 
+        // Get account type for this external account
+        const accountType = accountTypes[chosenExternalAccountId] || 'checking';
+        const isDebt = isDebtAccountType(accountType);
+        const debtType = getDebtType(accountType);
+
         // Skip linking accounts that were previously linked with
         // a different bank.
         if (externalAccountIndex === -1) {
@@ -168,7 +205,9 @@ export function SelectLinkedAccountsModal({
                 chosenLocalAccountId !== addOffBudgetAccountOption.id
                   ? chosenLocalAccountId
                   : undefined,
-              offBudget,
+              offBudget: isDebt ? false : offBudget,
+              isDebt,
+              debtType,
             }),
           );
         } else if (propsWithSortedExternalAccounts.syncSource === 'pluggyai') {
@@ -183,7 +222,9 @@ export function SelectLinkedAccountsModal({
                 chosenLocalAccountId !== addOffBudgetAccountOption.id
                   ? chosenLocalAccountId
                   : undefined,
-              offBudget,
+              offBudget: isDebt ? false : offBudget,
+              isDebt,
+              debtType,
             }),
           );
         } else {
@@ -199,7 +240,9 @@ export function SelectLinkedAccountsModal({
                 chosenLocalAccountId !== addOffBudgetAccountOption.id
                   ? chosenLocalAccountId
                   : undefined,
-              offBudget,
+              offBudget: isDebt ? false : offBudget,
+              isDebt,
+              debtType,
             }),
           );
         }
@@ -237,6 +280,13 @@ export function SelectLinkedAccountsModal({
 
       return updatedAccounts;
     });
+  }
+
+  function onSetAccountType(externalAccountId: string, accountType: AccountTypeOption) {
+    setAccountTypes(prev => ({
+      ...prev,
+      [externalAccountId]: accountType,
+    }));
   }
 
   const getChosenAccount = (accountId: string) => {
@@ -323,6 +373,8 @@ export function SelectLinkedAccountsModal({
                   chosenAccount={getChosenAccount(account.account_id)}
                   unlinkedAccounts={unlinkedAccounts}
                   onSetLinkedAccount={onSetLinkedAccount}
+                  accountType={accountTypes[account.account_id] || 'checking'}
+                  onSetAccountType={onSetAccountType}
                 />
               ))}
             </View>
@@ -335,9 +387,10 @@ export function SelectLinkedAccountsModal({
               }}
             >
               <TableHeader>
-                <Cell value={t('Institution to Sync')} width={175} />
-                <Cell value={t('Bank Account To Sync')} width={175} />
+                <Cell value={t('Institution to Sync')} width={150} />
+                <Cell value={t('Bank Account To Sync')} width={150} />
                 <Cell value={t('Balance')} width={80} />
+                <Cell value={t('Account Type')} width={130} />
                 <Cell value={t('Account in Actual')} width="flex" />
                 <Cell value={t('Actions')} width={150} />
               </TableHeader>
@@ -361,6 +414,8 @@ export function SelectLinkedAccountsModal({
                       chosenAccount={getChosenAccount(item.account_id)}
                       unlinkedAccounts={unlinkedAccounts}
                       onSetLinkedAccount={onSetLinkedAccount}
+                      accountType={accountTypes[item.account_id] || 'checking'}
+                      onSetAccountType={onSetAccountType}
                     />
                   </View>
                 )}
@@ -417,6 +472,8 @@ type SharedAccountRowProps = {
     externalAccount: ExternalAccount,
     localAccountId: string | null | undefined,
   ) => void;
+  accountType: AccountTypeOption;
+  onSetAccountType: (externalAccountId: string, accountType: AccountTypeOption) => void;
 };
 
 function getAvailableAccountOptions(
@@ -444,12 +501,15 @@ function TableRow({
   chosenAccount,
   unlinkedAccounts,
   onSetLinkedAccount,
+  accountType,
+  onSetAccountType,
 }: TableRowProps) {
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const { addOnBudgetAccountOption, addOffBudgetAccountOption } =
     useAddBudgetAccountOptions();
   const format = useFormat();
   const { t } = useTranslation();
+  const accountTypeOptions = useAccountTypeOptions();
 
   const availableAccountOptions = getAvailableAccountOptions(
     unlinkedAccounts,
@@ -460,7 +520,7 @@ function TableRow({
 
   return (
     <Row style={{ backgroundColor: theme.tableBackground }}>
-      <Field width={175}>
+      <Field width={150}>
         <Tooltip content={getInstitutionName(externalAccount)}>
           <View
             style={{
@@ -473,7 +533,7 @@ function TableRow({
           </View>
         </Tooltip>
       </Field>
-      <Field width={175}>
+      <Field width={150}>
         <Tooltip content={externalAccount.name}>
           <View
             style={{
@@ -492,6 +552,14 @@ function TableRow({
             ? format(externalAccount.balance.toString(), 'financial')
             : t('Unknown')}
         </PrivacyFilter>
+      </Field>
+      <Field width={130}>
+        <Select
+          value={accountType}
+          onChange={(value: string) => onSetAccountType(externalAccount.account_id, value as AccountTypeOption)}
+          options={accountTypeOptions}
+          style={{ width: '100%' }}
+        />
       </Field>
       <Field
         width="flex"
@@ -563,12 +631,15 @@ function AccountCard({
   chosenAccount,
   unlinkedAccounts,
   onSetLinkedAccount,
+  accountType,
+  onSetAccountType,
 }: AccountCardProps) {
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const { addOnBudgetAccountOption, addOffBudgetAccountOption } =
     useAddBudgetAccountOptions();
   const format = useFormat();
   const { t } = useTranslation();
+  const accountTypeOptions = useAccountTypeOptions();
 
   const availableAccountOptions = getAvailableAccountOptions(
     unlinkedAccounts,
@@ -626,6 +697,26 @@ function AccountCard({
             : t('Unknown')}
         </PrivacyFilter>
       </View>
+
+      <SpaceBetween
+        direction="horizontal"
+        gap={5}
+        style={{
+          fontSize: '0.9em',
+          color: theme.pageTextSubdued,
+          alignItems: 'center',
+        }}
+      >
+        <Text>
+          <Trans>Account Type:</Trans>
+        </Text>
+        <Select
+          value={accountType}
+          onChange={(value: string) => onSetAccountType(externalAccount.account_id, value as AccountTypeOption)}
+          options={accountTypeOptions}
+          style={{ flex: 1 }}
+        />
+      </SpaceBetween>
 
       <SpaceBetween
         direction="horizontal"

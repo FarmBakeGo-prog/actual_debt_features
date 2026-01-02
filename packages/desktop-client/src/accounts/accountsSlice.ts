@@ -278,12 +278,14 @@ type LinkAccountPayload = {
   account: SyncServerGoCardlessAccount;
   upgradingId?: AccountEntity['id'] | undefined;
   offBudget?: boolean | undefined;
+  isDebt?: boolean;
+  debtType?: string;
 };
 
 export const linkAccount = createAppAsyncThunk(
   `${sliceName}/linkAccount`,
   async (
-    { requisitionId, account, upgradingId, offBudget }: LinkAccountPayload,
+    { requisitionId, account, upgradingId, offBudget, isDebt, debtType }: LinkAccountPayload,
     { dispatch },
   ) => {
     await send('gocardless-accounts-link', {
@@ -291,6 +293,8 @@ export const linkAccount = createAppAsyncThunk(
       account,
       upgradingId,
       offBudget,
+      isDebt,
+      debtType,
     });
     dispatch(markPayeesDirty());
     dispatch(markAccountsDirty());
@@ -301,18 +305,22 @@ type LinkAccountSimpleFinPayload = {
   externalAccount: SyncServerSimpleFinAccount;
   upgradingId?: AccountEntity['id'] | undefined;
   offBudget?: boolean | undefined;
+  isDebt?: boolean;
+  debtType?: string;
 };
 
 export const linkAccountSimpleFin = createAppAsyncThunk(
   `${sliceName}/linkAccountSimpleFin`,
   async (
-    { externalAccount, upgradingId, offBudget }: LinkAccountSimpleFinPayload,
+    { externalAccount, upgradingId, offBudget, isDebt, debtType }: LinkAccountSimpleFinPayload,
     { dispatch },
   ) => {
     await send('simplefin-accounts-link', {
       externalAccount,
       upgradingId,
       offBudget,
+      isDebt,
+      debtType,
     });
     dispatch(markPayeesDirty());
     dispatch(markAccountsDirty());
@@ -323,18 +331,22 @@ type LinkAccountPluggyAiPayload = {
   externalAccount: SyncServerPluggyAiAccount;
   upgradingId?: AccountEntity['id'];
   offBudget?: boolean;
+  isDebt?: boolean;
+  debtType?: string;
 };
 
 export const linkAccountPluggyAi = createAppAsyncThunk(
   `${sliceName}/linkAccountPluggyAi`,
   async (
-    { externalAccount, upgradingId, offBudget }: LinkAccountPluggyAiPayload,
+    { externalAccount, upgradingId, offBudget, isDebt, debtType }: LinkAccountPluggyAiPayload,
     { dispatch },
   ) => {
     await send('pluggyai-accounts-link', {
       externalAccount,
       upgradingId,
       offBudget,
+      isDebt,
+      debtType,
     });
     dispatch(markPayeesDirty());
     dispatch(markAccountsDirty());

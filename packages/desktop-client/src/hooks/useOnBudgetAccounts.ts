@@ -7,7 +7,10 @@ export function useOnBudgetAccounts() {
   return useMemo(
     () =>
       accounts.filter(
-        account => account.closed === 0 && account.offbudget === 0,
+        account =>
+          account.closed === 0 &&
+          account.offbudget === 0 &&
+          !account.is_debt,
       ),
     [accounts],
   );

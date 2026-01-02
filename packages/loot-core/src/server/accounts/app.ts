@@ -232,11 +232,15 @@ async function linkGoCardlessAccount({
   account,
   upgradingId,
   offBudget = false,
+  isDebt = false,
+  debtType,
 }: {
   requisitionId: string;
   account: SyncServerGoCardlessAccount;
   upgradingId?: AccountEntity['id'] | undefined;
   offBudget?: boolean | undefined;
+  isDebt?: boolean;
+  debtType?: string;
 }) {
   let id;
   const bank = await link.findOrCreateBank(account.institution, requisitionId);
@@ -257,6 +261,8 @@ async function linkGoCardlessAccount({
       account_id: account.account_id,
       bank: bank.id,
       account_sync_source: 'goCardless',
+      is_debt: isDebt ? 1 : 0,
+      debt_type: isDebt ? debtType : null,
     });
   } else {
     id = uuidv4();
@@ -267,8 +273,10 @@ async function linkGoCardlessAccount({
       name: account.name,
       official_name: account.official_name,
       bank: bank.id,
-      offbudget: offBudget ? 1 : 0,
+      offbudget: isDebt ? 0 : (offBudget ? 1 : 0),
       account_sync_source: 'goCardless',
+      is_debt: isDebt ? 1 : 0,
+      debt_type: isDebt ? debtType : null,
     });
     await db.insertPayee({
       name: '',
@@ -296,10 +304,14 @@ async function linkSimpleFinAccount({
   externalAccount,
   upgradingId,
   offBudget = false,
+  isDebt = false,
+  debtType,
 }: {
   externalAccount: SyncServerSimpleFinAccount;
   upgradingId?: AccountEntity['id'] | undefined;
   offBudget?: boolean | undefined;
+  isDebt?: boolean;
+  debtType?: string;
 }) {
   let id;
 
@@ -328,6 +340,8 @@ async function linkSimpleFinAccount({
       account_id: externalAccount.account_id,
       bank: bank.id,
       account_sync_source: 'simpleFin',
+      is_debt: isDebt ? 1 : 0,
+      debt_type: isDebt ? debtType : null,
     });
   } else {
     id = uuidv4();
@@ -337,8 +351,10 @@ async function linkSimpleFinAccount({
       name: externalAccount.name,
       official_name: externalAccount.name,
       bank: bank.id,
-      offbudget: offBudget ? 1 : 0,
+      offbudget: isDebt ? 0 : (offBudget ? 1 : 0),
       account_sync_source: 'simpleFin',
+      is_debt: isDebt ? 1 : 0,
+      debt_type: isDebt ? debtType : null,
     });
     await db.insertPayee({
       name: '',
@@ -366,10 +382,14 @@ async function linkPluggyAiAccount({
   externalAccount,
   upgradingId,
   offBudget = false,
+  isDebt = false,
+  debtType,
 }: {
   externalAccount: SyncServerPluggyAiAccount;
   upgradingId?: AccountEntity['id'] | undefined;
   offBudget?: boolean | undefined;
+  isDebt?: boolean;
+  debtType?: string;
 }) {
   let id;
 
@@ -398,6 +418,8 @@ async function linkPluggyAiAccount({
       account_id: externalAccount.account_id,
       bank: bank.id,
       account_sync_source: 'pluggyai',
+      is_debt: isDebt ? 1 : 0,
+      debt_type: isDebt ? debtType : null,
     });
   } else {
     id = uuidv4();
@@ -407,8 +429,10 @@ async function linkPluggyAiAccount({
       name: externalAccount.name,
       official_name: externalAccount.name,
       bank: bank.id,
-      offbudget: offBudget ? 1 : 0,
+      offbudget: isDebt ? 0 : (offBudget ? 1 : 0),
       account_sync_source: 'pluggyai',
+      is_debt: isDebt ? 1 : 0,
+      debt_type: isDebt ? debtType : null,
     });
     await db.insertPayee({
       name: '',
