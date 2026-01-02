@@ -1,5 +1,5 @@
 import React from 'react';
-import { Trans, useTranslation } from 'react-i18next';
+import { Trans } from 'react-i18next';
 
 import { Button } from '@actual-app/components/button';
 import { Text } from '@actual-app/components/text';
@@ -13,7 +13,6 @@ import { pushModal } from '@desktop-client/modals/modalsSlice';
 import { useDispatch } from '@desktop-client/redux';
 
 export function DebtTrackingSettings() {
-  const { t } = useTranslation();
   const dispatch = useDispatch();
   const [debtTrackingEnabled] = useLocalPref('flags.debtTrackingEnabled');
 

@@ -1,11 +1,12 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 
 import { Button, ButtonWithLoading } from '@actual-app/components/button';
-import { SvgAlertTriangle } from '@actual-app/components/icons/v2/AlertTriangle';
-import { SvgCheckCircle1 } from '@actual-app/components/icons/v2/CheckCircle1';
-import { SvgDownloadThickBottom } from '@actual-app/components/icons/v2/DownloadThickBottom';
-import { Progress } from '@actual-app/components/progress';
+import {
+  SvgAlertTriangle,
+  SvgCheckCircle1,
+  SvgDownloadThickBottom,
+} from '@actual-app/components/icons/v2';
 import { Select } from '@actual-app/components/select';
 import { Text } from '@actual-app/components/text';
 import { theme } from '@actual-app/components/theme';
@@ -94,8 +95,8 @@ export function DebtMigrationWizard() {
         configs.set(c.accountId, {
           accountId: c.accountId,
           accountName: c.accountName,
-          balance: c.currentBalance,
-          debtType: c.suggestedType || 'credit_card',
+          balance: c.balance,
+          debtType: c.suggestedDebtType || 'credit_card',
           apr: '',
         });
       });
@@ -189,9 +190,8 @@ export function DebtMigrationWizard() {
         if (config) {
           await send('account-convert-to-debt', {
             id: accountId,
-            isDebt: true,
             debtType: config.debtType,
-            apr: config.apr ? parseFloat(config.apr) : null,
+            apr: config.apr ? parseFloat(config.apr) : 0,
           });
         }
 
@@ -213,11 +213,11 @@ export function DebtMigrationWizard() {
 
   const handleSkip = () => {
     setDebtTrackingDismissed(true);
-    dispatch(closeModal({ modal: { name: 'debt-migration-wizard' } }));
+    dispatch(closeModal());
   };
 
   const handleClose = () => {
-    dispatch(closeModal({ modal: { name: 'debt-migration-wizard' } }));
+    dispatch(closeModal());
   };
 
   const renderWelcome = () => (
@@ -293,9 +293,7 @@ export function DebtMigrationWizard() {
           <Trans>Download Backup</Trans>
         </ButtonWithLoading>
         {backupCreated && (
-          <View
-            style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}
-          >
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
             <SvgCheckCircle1
               style={{ width: 16, height: 16, color: theme.noticeTextDark }}
             />
@@ -394,24 +392,21 @@ export function DebtMigrationWizard() {
                     <Text
                       style={{ fontSize: 12, color: theme.pageTextSubdued }}
                     >
-                      Balance: {formatCurrency(candidate.currentBalance)} •
-                      Confidence: {candidate.confidence}
+                      Balance: {formatCurrency(candidate.balance)} • Confidence:{' '}
+                      {candidate.confidence}
                     </Text>
                   </View>
                   {isSelected && config && (
                     <Select
                       value={config.debtType}
                       options={[
-                        { value: 'credit_card', label: t('Credit Card') },
-                        { value: 'mortgage', label: t('Mortgage') },
-                        { value: 'auto_loan', label: t('Auto Loan') },
-                        { value: 'student_loan', label: t('Student Loan') },
-                        { value: 'personal_loan', label: t('Personal Loan') },
-                        {
-                          value: 'line_of_credit',
-                          label: t('Line of Credit'),
-                        },
-                        { value: 'other', label: t('Other') },
+                        ['credit_card', t('Credit Card')],
+                        ['mortgage', t('Mortgage')],
+                        ['auto_loan', t('Auto Loan')],
+                        ['student_loan', t('Student Loan')],
+                        ['personal_loan', t('Personal Loan')],
+                        ['line_of_credit', t('Line of Credit')],
+                        ['other', t('Other')],
                       ]}
                       onChange={value =>
                         updateConfig(candidate.accountId, 'debtType', value)
@@ -481,7 +476,24 @@ export function DebtMigrationWizard() {
           <Text style={{ fontWeight: 600 }}>
             <Trans>Applying changes...</Trans>
           </Text>
-          <Progress value={applyProgress} />
+          <View
+            style={{
+              width: '100%',
+              height: 8,
+              backgroundColor: theme.tableRowHeaderBackground,
+              borderRadius: 4,
+              overflow: 'hidden',
+            }}
+          >
+            <View
+              style={{
+                width: `${applyProgress}%`,
+                height: '100%',
+                backgroundColor: theme.buttonPrimaryBackground,
+                transition: 'width 0.3s ease',
+              }}
+            />
+          </View>
           <Text style={{ fontSize: 12, color: theme.pageTextSubdued }}>
             {applyProgress < 30
               ? t('Updating database schema...')
@@ -562,7 +574,10 @@ export function DebtMigrationWizard() {
   };
 
   return (
-    <Modal name="debt-migration-wizard" containerProps={{ style: { width: 550 } }}>
+    <Modal
+      name="debt-migration-wizard"
+      containerProps={{ style: { width: 550 } }}
+    >
       <ModalHeader
         title={<ModalTitle title={stepTitles[step]} shrinkOnOverflow />}
         rightContent={<ModalCloseButton onPress={handleClose} />}
