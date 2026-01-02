@@ -18,6 +18,7 @@ export function accountFilter(
     | AccountEntity['id']
     | 'onbudget'
     | 'offbudget'
+    | 'debt'
     | 'closed'
     | 'uncategorized',
   field = 'account',
@@ -36,6 +37,10 @@ export function accountFilter(
           { [`${field}.offbudget`]: true },
           { [`${field}.closed`]: false },
         ],
+      };
+    } else if (accountId === 'debt') {
+      return {
+        $and: [{ [`${field}.is_debt`]: true }, { [`${field}.closed`]: false }],
       };
     } else if (accountId === 'closed') {
       return { [`${field}.closed`]: true };

@@ -232,7 +232,29 @@ export function Account<FieldName extends SheetFields<'account'>>({
                     />
                   </InitialFocus>
                 ) : (
-                  name
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 6,
+                    }}
+                  >
+                    <Text>{name}</Text>
+                    {account?.is_debt === 1 && account?.apr && (
+                      <View
+                        style={{
+                          backgroundColor: theme.noticeBackgroundLight,
+                          color: theme.noticeText,
+                          borderRadius: 4,
+                          padding: '2px 6px',
+                          fontSize: '0.7em',
+                          fontWeight: 600,
+                        }}
+                      >
+                        {account.apr}% APR
+                      </View>
+                    )}
+                  </View>
                 )
               }
               right={<CellValue binding={query} type="financial" />}
