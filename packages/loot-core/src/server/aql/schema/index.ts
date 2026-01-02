@@ -54,10 +54,10 @@ export const schema = {
     tombstone: f('boolean'),
     schedule: f('id', { ref: 'schedules' }),
     raw_synced_data: f('string'),
-    // Debt transaction breakdown fields (for loan payment display like banks show)
-    principal_amount: f('integer'),
-    interest_amount: f('integer'),
-    fee_amount: f('integer'),
+    // Note: principal_amount, interest_amount, fee_amount are NOT in the AQL schema.
+    // They exist in the database (added by migration) but are queried directly
+    // when displaying debt account transactions. This prevents view generation
+    // failures on databases that haven't run the migration yet.
     // subtransactions is a special field added if the table has the
     // `splits: grouped` option
   },
