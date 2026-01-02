@@ -625,10 +625,6 @@ async function convertToDebtAccount({
       );
     }
 
-    // Import ensureDebtCategories from budget app
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { ensureDebtCategories } = await import('../budget/app');
-
     // Ensure debt categories exist or create them
     const debtCategories = await ensureDebtCategories();
     const finalPrincipalCategoryId =

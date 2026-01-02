@@ -466,10 +466,10 @@ export async function ensureDebtCategories(): Promise<{
 
   // Create the group if it doesn't exist
   if (!debtGroup) {
-    const groupId = await createCategoryGroup({
+    const groupId = await db.insertCategoryGroup({
       name: 'Debt Payments',
-      isIncome: false,
-      hidden: false,
+      is_income: 0,
+      hidden: 0,
     });
 
     // Refresh groups to get the newly created group with its categories
@@ -488,11 +488,11 @@ export async function ensureDebtCategories(): Promise<{
 
   // Create Debt Principal category if it doesn't exist
   if (!principalCategory) {
-    const principalId = await createCategory({
+    const principalId = await db.insertCategory({
       name: 'Debt Principal',
-      groupId: debtGroup.id,
-      isIncome: false,
-      hidden: false,
+      cat_group: debtGroup.id,
+      is_income: 0,
+      hidden: 0,
     });
 
     // Refresh to get the full category object
@@ -509,11 +509,11 @@ export async function ensureDebtCategories(): Promise<{
 
   // Create Debt Interest category if it doesn't exist
   if (!interestCategory) {
-    const interestId = await createCategory({
+    const interestId = await db.insertCategory({
       name: 'Debt Interest',
-      groupId: debtGroup.id,
-      isIncome: false,
-      hidden: false,
+      cat_group: debtGroup.id,
+      is_income: 0,
+      hidden: 0,
     });
 
     // Refresh to get the full category object

@@ -146,6 +146,7 @@ type TransactionHeaderProps = {
   onSort: (field: string, ascDesc: 'asc' | 'desc') => void;
   ascDesc: 'asc' | 'desc';
   field: string;
+  account?: { is_debt?: number };
 };
 
 const TransactionHeader = memo(
@@ -160,6 +161,7 @@ const TransactionHeader = memo(
     ascDesc,
     field,
     showSelection,
+    account,
   }: TransactionHeaderProps) => {
     const dispatchSelected = useSelectedDispatch();
     const { t } = useTranslation();
@@ -288,7 +290,7 @@ const TransactionHeader = memo(
           }
         />
         <HeaderCell
-          value={t('Deposit')}
+          value={account?.is_debt === 1 ? t('Charge') : t('Deposit')}
           width={100}
           alignItems="flex-end"
           marginRight={-5}
@@ -1979,6 +1981,7 @@ type TransactionTableInnerProps = {
   showCategory: boolean;
   currentAccountId: AccountEntity['id'];
   currentCategoryId: CategoryEntity['id'];
+  account?: AccountEntity;
   isAdding: boolean;
   isNew: (id: TransactionEntity['id']) => boolean;
   isMatched: (id: TransactionEntity['id']) => boolean;
@@ -2225,6 +2228,7 @@ function TransactionTableInner({
           ascDesc={props.ascDesc}
           field={props.sortField}
           showSelection={props.showSelection}
+          account={props.account}
         />
 
         {props.isAdding && (
