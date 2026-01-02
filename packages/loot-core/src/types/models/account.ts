@@ -1,3 +1,23 @@
+export type DebtType =
+  | 'credit_card'
+  | 'auto_loan'
+  | 'student_loan'
+  | 'mortgage'
+  | 'personal_loan'
+  | 'line_of_credit';
+
+export type InterestScheme =
+  | 'simple'
+  | 'compound_monthly'
+  | 'compound_daily'
+  | 'compound_annually';
+
+export type CompoundingFrequency =
+  | 'daily'
+  | 'monthly'
+  | 'quarterly'
+  | 'annually';
+
 export type AccountEntity = {
   id: string;
   name: string;
@@ -7,9 +27,15 @@ export type AccountEntity = {
   last_reconciled: string | null;
   tombstone: 0 | 1;
   is_debt: 0 | 1;
+  debt_type: DebtType | null;
   debt_original_balance: number | null;
-  debt_interest_rate: number | null;
+  debt_interest_rate: number | null; // Legacy field, use apr instead
+  apr: number | null; // Annual percentage rate
   debt_minimum_payment: number | null;
+  interest_scheme: InterestScheme | null;
+  compounding_frequency: CompoundingFrequency | null;
+  interest_posting_day: number | null; // 1-31 for specific day, 0/null for last day
+  apr_last_updated: string | null; // For variable rate loans
 } & (_SyncFields<true> | _SyncFields<false>);
 
 export type _SyncFields<T> = {

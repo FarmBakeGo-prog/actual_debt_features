@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 
 import { Block } from '@actual-app/components/block';
@@ -7,8 +7,8 @@ import { theme } from '@actual-app/components/theme';
 import { View } from '@actual-app/components/view';
 
 import { send } from 'loot-core/platform/client/fetch';
-import { q } from 'loot-core/shared/query';
 import * as monthUtils from 'loot-core/shared/months';
+import { q } from 'loot-core/shared/query';
 import { type AccountEntity } from 'loot-core/types/models';
 
 import { PrivacyFilter } from '@desktop-client/components/PrivacyFilter';
@@ -36,7 +36,9 @@ export function InterestPaidCard({
   const { t } = useTranslation();
   const format = useFormat();
   const [nameMenuOpen, setNameMenuOpen] = useState(false);
-  const [interestData, setInterestData] = useState<Array<{ accountName: string; interestPaid: number }>>([]);
+  const [interestData, setInterestData] = useState<
+    Array<{ accountName: string; interestPaid: number }>
+  >([]);
 
   // Filter to only debt accounts
   const debtAccounts = useMemo(
@@ -89,7 +91,7 @@ export function InterestPaidCard({
   }, [meta?.timeFrame, t]);
 
   // Load interest data for each account
-  React.useEffect(() => {
+  useEffect(() => {
     async function loadInterestData() {
       const data = await Promise.all(
         debtAccounts.map(async account => {
@@ -106,7 +108,7 @@ export function InterestPaidCard({
               query: interestQuery.serialize(),
             });
             const amount = typeof result === 'number' ? result : 0;
-            
+
             return {
               accountName: account.name,
               interestPaid: Math.abs(amount),
@@ -121,7 +123,7 @@ export function InterestPaidCard({
       );
       setInterestData(data);
     }
-    
+
     loadInterestData();
   }, [debtAccounts, startDate, endDate]);
 

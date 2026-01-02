@@ -25,9 +25,15 @@ export function generateAccount(
     tombstone: 0,
     closed: 0,
     is_debt: 0,
+    debt_type: null,
     debt_original_balance: null,
     debt_interest_rate: null,
+    apr: null,
     debt_minimum_payment: null,
+    interest_scheme: null,
+    compounding_frequency: null,
+    interest_posting_day: null,
+    apr_last_updated: null,
     ...emptySyncFields(),
   };
 

@@ -143,9 +143,13 @@ type CreateAccountPayload = {
   balance: number;
   offBudget: boolean;
   isDebt?: boolean;
+  debtType?: string;
   debtOriginalBalance?: number;
-  debtInterestRate?: number;
+  apr?: number;
   debtMinimumPayment?: number;
+  interestScheme?: string;
+  compoundingFrequency?: string;
+  interestPostingDay?: number;
 };
 
 export const createAccount = createAppAsyncThunk(
@@ -155,18 +159,26 @@ export const createAccount = createAppAsyncThunk(
     balance,
     offBudget,
     isDebt,
+    debtType,
     debtOriginalBalance,
-    debtInterestRate,
+    apr,
     debtMinimumPayment,
+    interestScheme,
+    compoundingFrequency,
+    interestPostingDay,
   }: CreateAccountPayload) => {
     const id = await send('account-create', {
       name,
       balance,
       offBudget,
       isDebt,
+      debtType,
       debtOriginalBalance,
-      debtInterestRate,
+      apr,
       debtMinimumPayment,
+      interestScheme,
+      compoundingFrequency,
+      interestPostingDay,
     });
     return id;
   },

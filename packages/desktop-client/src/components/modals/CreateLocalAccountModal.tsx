@@ -8,6 +8,7 @@ import { FormError } from '@actual-app/components/form-error';
 import { InitialFocus } from '@actual-app/components/initial-focus';
 import { InlineField } from '@actual-app/components/inline-field';
 import { Input } from '@actual-app/components/input';
+import { Select } from '@actual-app/components/select';
 import { Text } from '@actual-app/components/text';
 import { theme } from '@actual-app/components/theme';
 import { View } from '@actual-app/components/view';
@@ -39,9 +40,15 @@ export function CreateLocalAccountModal() {
   const [offbudget, setOffbudget] = useState(false);
   const [balance, setBalance] = useState('0');
   const [isDebt, setIsDebt] = useState(false);
+  const [debtType, setDebtType] = useState<string>('credit_card');
   const [debtOriginalBalance, setDebtOriginalBalance] = useState('');
-  const [debtInterestRate, setDebtInterestRate] = useState('');
+  const [apr, setApr] = useState('');
   const [debtMinimumPayment, setDebtMinimumPayment] = useState('');
+  const [interestScheme, setInterestScheme] =
+    useState<string>('compound_monthly');
+  const [compoundingFrequency, setCompoundingFrequency] =
+    useState<string>('monthly');
+  const [interestPostingDay, setInterestPostingDay] = useState<string>('');
 
   const [nameError, setNameError] = useState(null);
   const [balanceError, setBalanceError] = useState(false);
@@ -72,16 +79,21 @@ export function CreateLocalAccountModal() {
         createAccount({
           name,
           balance: toRelaxedNumber(balance),
-          offBudget: offbudget,
+          offBudget: isDebt ? false : offbudget, // Force on-budget for debt accounts
           isDebt,
+          debtType: isDebt ? debtType : undefined,
           debtOriginalBalance: debtOriginalBalance
             ? toRelaxedNumber(debtOriginalBalance)
             : undefined,
-          debtInterestRate: debtInterestRate
-            ? parseFloat(debtInterestRate)
-            : undefined,
+          apr: apr ? parseFloat(apr) : undefined,
           debtMinimumPayment: debtMinimumPayment
             ? toRelaxedNumber(debtMinimumPayment)
+            : undefined,
+          interestScheme: isDebt && apr ? interestScheme : undefined,
+          compoundingFrequency:
+            isDebt && apr ? compoundingFrequency : undefined,
+          interestPostingDay: interestPostingDay
+            ? parseInt(interestPostingDay, 10)
             : undefined,
         }),
       ).unwrap();
@@ -127,52 +139,55 @@ export function CreateLocalAccountModal() {
                   justifyContent: 'flex-end',
                 }}
               >
-                <View style={{ flexDirection: 'column' }}>
-                  <View
-                    style={{
-                      flexDirection: 'row',
-                      justifyContent: 'flex-end',
-                    }}
-                  >
-                    <Checkbox
-                      id="offbudget"
-                      name="offbudget"
-                      checked={offbudget}
-                      onChange={() => setOffbudget(!offbudget)}
-                    />
-                    <label
-                      htmlFor="offbudget"
+                {/* LAYER 2: UI Validation - Hide off-budget when debt is selected */}
+                {!isDebt && (
+                  <View style={{ flexDirection: 'column' }}>
+                    <View
                       style={{
-                        userSelect: 'none',
-                        verticalAlign: 'center',
+                        flexDirection: 'row',
+                        justifyContent: 'flex-end',
                       }}
                     >
-                      <Trans>Off budget</Trans>
-                    </label>
+                      <Checkbox
+                        id="offbudget"
+                        name="offbudget"
+                        checked={offbudget}
+                        onChange={() => setOffbudget(!offbudget)}
+                      />
+                      <label
+                        htmlFor="offbudget"
+                        style={{
+                          userSelect: 'none',
+                          verticalAlign: 'center',
+                        }}
+                      >
+                        <Trans>Off budget</Trans>
+                      </label>
+                    </View>
+                    <div
+                      style={{
+                        textAlign: 'right',
+                        fontSize: '0.7em',
+                        color: theme.pageTextLight,
+                        marginTop: 3,
+                      }}
+                    >
+                      <Text>
+                        <Trans>
+                          This cannot be changed later. See{' '}
+                          <Link
+                            variant="external"
+                            linkColor="muted"
+                            to="https://actualbudget.org/docs/accounts/#off-budget-accounts"
+                          >
+                            Accounts Overview
+                          </Link>{' '}
+                          for more information.
+                        </Trans>
+                      </Text>
+                    </div>
                   </View>
-                  <div
-                    style={{
-                      textAlign: 'right',
-                      fontSize: '0.7em',
-                      color: theme.pageTextLight,
-                      marginTop: 3,
-                    }}
-                  >
-                    <Text>
-                      <Trans>
-                        This cannot be changed later. See{' '}
-                        <Link
-                          variant="external"
-                          linkColor="muted"
-                          to="https://actualbudget.org/docs/accounts/#off-budget-accounts"
-                        >
-                          Accounts Overview
-                        </Link>{' '}
-                        for more information.
-                      </Trans>
-                    </Text>
-                  </div>
-                </View>
+                )}
               </View>
 
               <View
@@ -225,6 +240,21 @@ export function CreateLocalAccountModal() {
 
               {isDebt && (
                 <>
+                  <InlineField label={t('Debt Type')} width="100%">
+                    <Select
+                      value={debtType}
+                      onChange={setDebtType}
+                      options={[
+                        ['credit_card', t('Credit Card')],
+                        ['auto_loan', t('Auto Loan')],
+                        ['student_loan', t('Student Loan')],
+                        ['mortgage', t('Mortgage')],
+                        ['personal_loan', t('Personal Loan')],
+                        ['line_of_credit', t('Line of Credit')],
+                      ]}
+                    />
+                  </InlineField>
+
                   <InlineField label={t('Original Balance')} width="100%">
                     <Input
                       name="debtOriginalBalance"
@@ -235,13 +265,51 @@ export function CreateLocalAccountModal() {
                     />
                   </InlineField>
 
-                  <InlineField label={t('Interest Rate (%)')} width="100%">
+                  <InlineField label={t('APR (%)')} width="100%">
                     <Input
-                      name="debtInterestRate"
+                      name="apr"
                       inputMode="decimal"
-                      value={debtInterestRate}
-                      onChangeValue={setDebtInterestRate}
+                      value={apr}
+                      onChangeValue={setApr}
                       style={{ flex: 1 }}
+                      placeholder={t('Annual Percentage Rate')}
+                    />
+                  </InlineField>
+
+                  <InlineField label={t('Interest Calculation')} width="100%">
+                    <Select
+                      value={interestScheme}
+                      onChange={setInterestScheme}
+                      options={[
+                        ['simple', t('Simple Interest')],
+                        ['compound_monthly', t('Compound Monthly')],
+                        ['compound_daily', t('Compound Daily')],
+                        ['compound_annually', t('Compound Annually')],
+                      ]}
+                    />
+                  </InlineField>
+
+                  <InlineField label={t('Compounding Frequency')} width="100%">
+                    <Select
+                      value={compoundingFrequency}
+                      onChange={setCompoundingFrequency}
+                      options={[
+                        ['daily', t('Daily')],
+                        ['monthly', t('Monthly')],
+                        ['quarterly', t('Quarterly')],
+                        ['annually', t('Annually')],
+                      ]}
+                    />
+                  </InlineField>
+
+                  <InlineField label={t('Interest Posting Day')} width="100%">
+                    <Input
+                      name="interestPostingDay"
+                      inputMode="numeric"
+                      value={interestPostingDay}
+                      onChangeValue={setInterestPostingDay}
+                      style={{ flex: 1 }}
+                      placeholder={t('1-31, or blank for last day of month')}
                     />
                   </InlineField>
 
@@ -254,6 +322,25 @@ export function CreateLocalAccountModal() {
                       style={{ flex: 1 }}
                     />
                   </InlineField>
+
+                  <View
+                    style={{
+                      fontSize: '0.8em',
+                      color: theme.pageTextLight,
+                      padding: 10,
+                      backgroundColor: theme.tableBackground,
+                      borderRadius: 4,
+                      marginTop: 10,
+                    }}
+                  >
+                    <Text>
+                      <Trans>
+                        💡 Debt accounts are always on-budget. Interest will be
+                        calculated and posted automatically based on your APR
+                        and compounding settings.
+                      </Trans>
+                    </Text>
+                  </View>
                 </>
               )}
 

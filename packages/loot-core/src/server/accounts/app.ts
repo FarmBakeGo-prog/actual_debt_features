@@ -71,12 +71,23 @@ async function updateAccount({
   id,
   name,
   last_reconciled,
+  offbudget,
+  is_debt,
 }: Pick<AccountEntity, 'id' | 'name'> &
-  Partial<Pick<AccountEntity, 'last_reconciled'>>) {
+  Partial<Pick<AccountEntity, 'last_reconciled' | 'offbudget' | 'is_debt'>>) {
+  // VALIDATION: Debt accounts must be on-budget (Layer 1: Database)
+  if (is_debt === 1 && offbudget === 1) {
+    throw new PostError(
+      'Debt accounts must be on-budget. Debt requires monthly budget allocation.',
+    );
+  }
+
   await db.update('accounts', {
     id,
     name,
     ...(last_reconciled && { last_reconciled }),
+    ...(offbudget !== undefined && { offbudget }),
+    ...(is_debt !== undefined && { is_debt }),
   });
   return {};
 }
@@ -326,29 +337,55 @@ async function createAccount({
   offBudget = false,
   closed = false,
   isDebt = false,
+  debtType,
   debtOriginalBalance,
   debtInterestRate,
+  apr,
   debtMinimumPayment,
+  interestScheme = 'compound_monthly',
+  compoundingFrequency = 'monthly',
+  interestPostingDay,
 }: {
   name: string;
   balance?: number | undefined;
   offBudget?: boolean | undefined;
   closed?: boolean | undefined;
   isDebt?: boolean | undefined;
+  debtType?: string | undefined;
   debtOriginalBalance?: number | undefined;
   debtInterestRate?: number | undefined;
+  apr?: number | undefined;
   debtMinimumPayment?: number | undefined;
+  interestScheme?: string | undefined;
+  compoundingFrequency?: string | undefined;
+  interestPostingDay?: number | undefined;
 }) {
+  // VALIDATION: Debt accounts must be on-budget (Layer 1: Database)
+  if (isDebt && offBudget) {
+    throw new PostError(
+      'Debt accounts must be on-budget. Debt requires monthly budget allocation.',
+    );
+  }
+
   const id: AccountEntity['id'] = await db.insertAccount({
     name,
     offbudget: offBudget ? 1 : 0,
     closed: closed ? 1 : 0,
     is_debt: isDebt ? 1 : 0,
+    debt_type: debtType ?? null,
     debt_original_balance:
       debtOriginalBalance != null ? amountToInteger(debtOriginalBalance) : null,
-    debt_interest_rate: debtInterestRate ?? null,
+    debt_interest_rate: debtInterestRate ?? null, // Legacy field
+    apr: apr ?? debtInterestRate ?? null, // Prefer apr, fall back to legacy
     debt_minimum_payment:
       debtMinimumPayment != null ? amountToInteger(debtMinimumPayment) : null,
+    interest_scheme:
+      isDebt && (apr || debtInterestRate) ? interestScheme : null,
+    compounding_frequency:
+      isDebt && (apr || debtInterestRate) ? compoundingFrequency : null,
+    interest_posting_day: interestPostingDay ?? null,
+    apr_last_updated:
+      isDebt && (apr || debtInterestRate) ? monthUtils.currentDay() : null,
   });
 
   await db.insertPayee({
@@ -370,47 +407,50 @@ async function createAccount({
     });
   }
 
-  // Set up scheduled transactions for debt accounts
-  if (isDebt && debtInterestRate != null) {
-    await setupDebtSchedules({
-      accountId: id,
-      interestRate: debtInterestRate,
-    });
-  }
+  // TODO: Set up scheduled transactions for debt accounts
+  // This requires more complex schedule/rule setup that needs additional implementation
+  // if (isDebt && debtInterestRate != null) {
+  //   await setupDebtSchedules({
+  //     accountId: id,
+  //     interestRate: debtInterestRate,
+  //   });
+  // }
 
   return id;
 }
 
-async function setupDebtSchedules({
-  accountId,
-  interestRate: _interestRate,
-}: {
-  accountId: AccountEntity['id'];
-  interestRate: number;
-}) {
-  // Create a payee for interest accrual
-  const interestPayeeId = await db.insertPayee({
-    name: 'Interest Accrual',
-  });
-
-  // Create rule for monthly interest accrual
-  const ruleId = uuidv4();
-  await db.insert('rules', {
-    id: ruleId,
-    stage: null,
-  });
-
-  // Create schedule for monthly interest posting
-  const currentDate = monthUtils.currentDay();
-  const nextMonth = monthUtils.addMonths(currentDate, 1);
-  const lastDayOfMonth = monthUtils.lastDayOfMonth(nextMonth);
-
-  await db.insert('schedules', {
-    rule: ruleId,
-    next_date: lastDayOfMonth,
-    posts_transaction: 1,
-  });
-}
+// TODO: Complete implementation of automatic interest schedule creation
+// This function needs proper rule conditions/actions and schedule configuration
+// async function setupDebtSchedules({
+//   accountId,
+//   interestRate: _interestRate,
+// }: {
+//   accountId: AccountEntity['id'];
+//   interestRate: number;
+// }) {
+//   // Create a payee for interest accrual
+//   const interestPayeeId = await db.insertPayee({
+//     name: 'Interest Accrual',
+//   });
+//
+//   // Create rule for monthly interest accrual
+//   const ruleId = uuidv4();
+//   await db.insert('rules', {
+//     id: ruleId,
+//     stage: null,
+//   });
+//
+//   // Create schedule for monthly interest posting
+//   const currentDate = monthUtils.currentDay();
+//   const nextMonth = monthUtils.addMonths(currentDate, 1);
+//   const lastDayOfMonth = monthUtils.lastDayOfMonth(nextMonth);
+//
+//   await db.insert('schedules', {
+//     rule: ruleId,
+//     next_date: lastDayOfMonth,
+//     posts_transaction: 1,
+//   });
+// }
 
 async function closeAccount({
   id,
