@@ -818,6 +818,18 @@ class AccountInternal extends PureComponent<
           }),
         );
         break;
+      case 'convert-debt':
+        this.props.dispatch(
+          pushModal({
+            modal: {
+              name: 'convert-to-debt',
+              options: {
+                accountIds: [accountId],
+              },
+            },
+          }),
+        );
+        break;
       case 'close':
         this.props.dispatch(openAccountCloseModal({ accountId }));
         break;

@@ -42,7 +42,7 @@ import { useDragRef } from '@desktop-client/hooks/useDragRef';
 import { useIsTestEnv } from '@desktop-client/hooks/useIsTestEnv';
 import { useNotes } from '@desktop-client/hooks/useNotes';
 import { useSyncedPref } from '@desktop-client/hooks/useSyncedPref';
-import { openAccountCloseModal } from '@desktop-client/modals/modalsSlice';
+import { openAccountCloseModal, pushModal } from '@desktop-client/modals/modalsSlice';
 import { useDispatch } from '@desktop-client/redux';
 import { type SheetFields, type Binding } from '@desktop-client/spreadsheet';
 
@@ -287,6 +287,19 @@ export function Account<FieldName extends SheetFields<'account'>>({
                       setIsEditing(true);
                       break;
                     }
+                    case 'convert-debt': {
+                      dispatch(
+                        pushModal({
+                          modal: {
+                            name: 'convert-to-debt',
+                            options: {
+                              accountIds: [account.id],
+                            },
+                          },
+                        }),
+                      );
+                      break;
+                    }
                     default: {
                       throw new Error(`Unrecognized menu option: ${type}`);
                     }
@@ -295,6 +308,9 @@ export function Account<FieldName extends SheetFields<'account'>>({
                 }}
                 items={[
                   { name: 'rename', text: t('Rename') },
+                  ...(!account.is_debt && !account.closed
+                    ? [{ name: 'convert-debt', text: t('Convert to Debt...') }]
+                    : []),
                   account.closed
                     ? { name: 'reopen', text: t('Reopen') }
                     : { name: 'close', text: t('Close') },

@@ -752,7 +752,8 @@ type AccountMenuProps = {
       | 'remove-sorting'
       | 'toggle-cleared'
       | 'toggle-reconciled'
-      | 'toggle-net-worth-chart',
+      | 'toggle-net-worth-chart'
+      | 'convert-debt',
   ) => void;
 };
 
@@ -830,6 +831,11 @@ function AccountMenu({
                   } as const,
                 ]
               : []
+          : []),
+
+        // Convert to debt option - only show if not already a debt account and not closed
+        ...(!account.is_debt && !account.closed
+          ? [{ name: 'convert-debt', text: t('Convert to Debt Account...') } as const]
           : []),
 
         ...(account.closed

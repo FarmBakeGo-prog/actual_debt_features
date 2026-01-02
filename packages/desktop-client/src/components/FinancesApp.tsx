@@ -8,6 +8,7 @@ import { theme } from '@actual-app/components/theme';
 import { View } from '@actual-app/components/view';
 
 import * as undo from 'loot-core/platform/client/undo';
+import { send } from 'loot-core/platform/client/fetch';
 
 import { UserAccessPage } from './admin/UserAccess/UserAccessPage';
 import { BankSyncStatus } from './BankSyncStatus';
@@ -36,6 +37,7 @@ import { useLocalPref } from '@desktop-client/hooks/useLocalPref';
 import { useMetaThemeColor } from '@desktop-client/hooks/useMetaThemeColor';
 import { useNavigate } from '@desktop-client/hooks/useNavigate';
 import { ScrollProvider } from '@desktop-client/hooks/useScrollListener';
+import { pushModal } from '@desktop-client/modals/modalsSlice';
 import { addNotification } from '@desktop-client/notifications/notificationsSlice';
 import { useSelector, useDispatch } from '@desktop-client/redux';
 
@@ -181,6 +183,64 @@ export function FinancesApp() {
     t,
     versionInfo,
   ]);
+
+  // Legacy debt account detection - one-time prompt
+  const [legacyDebtPromptShown, setLegacyDebtPromptShown] = useLocalPref(
+    'flags.legacyDebtPromptShown',
+  );
+
+  useEffect(() => {
+    async function checkForLegacyDebtAccounts() {
+      if (legacyDebtPromptShown || !isAccountsLoaded) {
+        return;
+      }
+
+      try {
+        const potentialDebts = await send('detect-debt-accounts');
+        if (potentialDebts && potentialDebts.length > 0) {
+          dispatch(
+            addNotification({
+              notification: {
+                type: 'message',
+                title: t('Potential debt accounts detected'),
+                message: t(
+                  'We found {{count}} account(s) that may be debt accounts. Convert them for better tracking and reporting.',
+                  { count: potentialDebts.length },
+                ),
+                sticky: true,
+                id: 'legacy-debt-detection',
+                button: {
+                  title: t('Review accounts'),
+                  action: () => {
+                    dispatch(
+                      pushModal({
+                        modal: {
+                          name: 'convert-to-debt',
+                          options: {
+                            accountIds: potentialDebts.map(a => a.id),
+                          },
+                        },
+                      }),
+                    );
+                  },
+                },
+                onClose: () => {
+                  setLegacyDebtPromptShown(true);
+                },
+              },
+            }),
+          );
+        } else {
+          // No legacy debts found, mark as shown to not check again
+          setLegacyDebtPromptShown(true);
+        }
+      } catch {
+        // Silently fail - this is a non-critical feature
+      }
+    }
+
+    checkForLegacyDebtAccounts();
+  }, [dispatch, isAccountsLoaded, legacyDebtPromptShown, setLegacyDebtPromptShown, t]);
 
   const scrollableRef = useRef<HTMLDivElement>(null);
 

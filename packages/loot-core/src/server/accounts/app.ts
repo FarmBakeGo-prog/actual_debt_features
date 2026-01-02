@@ -616,6 +616,7 @@ async function convertToDebtAccount({
   interestPostingDay,
   categorizeUncategorized = false,
   uncategorizedCategory,
+  negateBalance = false,
 }: {
   id: AccountEntity['id'];
   debtType: string;
@@ -627,6 +628,7 @@ async function convertToDebtAccount({
   interestPostingDay?: number | null;
   categorizeUncategorized?: boolean;
   uncategorizedCategory?: CategoryEntity['id'];
+  negateBalance?: boolean;
 }): Promise<{
   success: boolean;
   principalCategoryId: string;
@@ -647,18 +649,40 @@ async function convertToDebtAccount({
       throw new PostError('Account is already a debt account');
     }
 
-    if (account.offbudget === 1) {
-      throw new PostError(
-        'Cannot convert off-budget account to debt. Debt accounts must be on-budget.',
-      );
-    }
-
     // Ensure debt categories exist or create them
     const debtCategories = await ensureDebtCategories();
     const finalPrincipalCategoryId =
       principalCategoryId ?? debtCategories.principalCategoryId;
     const finalInterestCategoryId =
       interestCategoryId ?? debtCategories.interestCategoryId;
+
+    // If negating balance, get current balance and create adjustment transaction
+    if (negateBalance) {
+      // Get current account balance
+      const balanceResult = await db.first<{ balance: number }>(
+        `SELECT SUM(amount) as balance FROM transactions 
+         WHERE acct = ? AND tombstone = 0`,
+        [id],
+      );
+      const currentBalance = balanceResult?.balance || 0;
+
+      // If balance is positive (wrong sign for debt), create adjustment to negate it
+      if (currentBalance > 0) {
+        const adjustmentAmount = -2 * currentBalance; // Double negate to flip the sign
+        const startingBalancePayee = await getStartingBalancePayee();
+
+        await db.insertTransaction({
+          id: uuidv4(),
+          account: id,
+          amount: adjustmentAmount,
+          payee: startingBalancePayee.id,
+          date: monthUtils.currentDay(),
+          notes: t('Balance adjustment for debt account conversion'),
+          cleared: 1,
+          category: finalPrincipalCategoryId,
+        });
+      }
+    }
 
     // Update the account to be a debt account
     await db.update('accounts', {

@@ -46,7 +46,11 @@ type AccountConfig = {
 
 type ConversionStep = 1 | 2 | 3 | 4;
 
-export function ConvertToDebtModal() {
+type ConvertToDebtModalProps = {
+  accountIds?: string[];
+};
+
+export function ConvertToDebtModal({ accountIds }: ConvertToDebtModalProps = {}) {
   const { t } = useTranslation();
   const dispatch = useDispatch();
   const format = useFormat();
@@ -75,20 +79,33 @@ export function ConvertToDebtModal() {
       try {
         const detected = await send('debt-detect-accounts');
 
-        // Filter to high/medium confidence and auto-select high confidence
-        const filtered = detected.filter(
-          (c: DebtCandidate) =>
-            c.confidence === 'high' || c.confidence === 'medium',
-        );
-        setCandidates(filtered);
+        // If accountIds were passed, filter to those accounts and pre-select them
+        let filtered: DebtCandidate[];
+        let initialSelection: Set<string>;
 
-        // Auto-select high confidence candidates
-        const highConfidence = new Set(
-          filtered
-            .filter((c: DebtCandidate) => c.confidence === 'high')
-            .map((c: DebtCandidate) => c.accountId),
-        );
-        setSelectedAccounts(highConfidence);
+        if (accountIds && accountIds.length > 0) {
+          // Filter to specific accounts and include all of them
+          filtered = detected.filter((c: DebtCandidate) =>
+            accountIds.includes(c.accountId),
+          );
+          // Pre-select all passed accounts
+          initialSelection = new Set(accountIds);
+        } else {
+          // Default behavior: filter to high/medium confidence
+          filtered = detected.filter(
+            (c: DebtCandidate) =>
+              c.confidence === 'high' || c.confidence === 'medium',
+          );
+          // Auto-select high confidence candidates
+          initialSelection = new Set(
+            filtered
+              .filter((c: DebtCandidate) => c.confidence === 'high')
+              .map((c: DebtCandidate) => c.accountId),
+          );
+        }
+
+        setCandidates(filtered);
+        setSelectedAccounts(initialSelection);
 
         // Initialize configs for all candidates
         const configs = new Map<string, AccountConfig>();

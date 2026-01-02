@@ -147,7 +147,7 @@ export function Modals() {
           return <ConvertToScheduleModal key={key} {...modal.options} />;
 
         case 'convert-to-debt':
-          return <ConvertToDebtModal key={key} />;
+          return <ConvertToDebtModal key={key} {...modal.options} />;
 
         case 'confirm-delete':
           return <ConfirmDeleteModal key={key} {...modal.options} />;

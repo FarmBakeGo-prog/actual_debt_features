@@ -506,6 +506,9 @@ export type Modal =
     }
   | {
       name: 'convert-to-debt';
+      options?: {
+        accountIds?: string[];
+      };
     }
   | {
       name: 'confirm-delete';
