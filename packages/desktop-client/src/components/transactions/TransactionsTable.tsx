@@ -302,7 +302,7 @@ const TransactionHeader = memo(
             onSort('deposit', selectAscDesc(field, ascDesc, 'deposit', 'desc'))
           }
         />
-        {showBalance && (
+        {showBalance && !isDebtAccount && (
           <HeaderCell
             value={t('Balance')}
             width={103}
@@ -317,7 +317,7 @@ const TransactionHeader = memo(
             width={90}
             alignItems="flex-end"
             marginRight={-5}
-            id="principal"
+            id="principal_amount"
           />
         )}
         {isDebtAccount && (
@@ -326,7 +326,7 @@ const TransactionHeader = memo(
             width={90}
             alignItems="flex-end"
             marginRight={-5}
-            id="interest"
+            id="interest_amount"
           />
         )}
         {isDebtAccount && (
@@ -335,7 +335,16 @@ const TransactionHeader = memo(
             width={70}
             alignItems="flex-end"
             marginRight={-5}
-            id="fee"
+            id="fee_amount"
+          />
+        )}
+        {showBalance && isDebtAccount && (
+          <HeaderCell
+            value={t('Balance')}
+            width={103}
+            alignItems="flex-end"
+            marginRight={-5}
+            id="balance"
           />
         )}
         {showCleared && (
@@ -1697,9 +1706,9 @@ const Transaction = memo(function Transaction({
         }}
       />
 
-      {showBalance && (
+      {showBalance && !isDebtAccount && (
         <Cell
-          /* Balance field for all transactions */
+          /* Balance field for non-debt accounts */
           name="balance"
           value={
             runningBalance == null || isChild || isTemporaryId(id)
@@ -1720,10 +1729,10 @@ const Transaction = memo(function Transaction({
         <InputCell
           /* Principal amount for debt transactions */
           type="input"
-          name="principal"
+          name="principal_amount"
           width={90}
-          exposed={focusedField === 'principal'}
-          focused={focusedField === 'principal'}
+          exposed={focusedField === 'principal_amount'}
+          focused={focusedField === 'principal_amount'}
           value={
             transaction.principal_amount != null && !isChild
               ? integerToCurrency(transaction.principal_amount)
@@ -1754,10 +1763,10 @@ const Transaction = memo(function Transaction({
         <InputCell
           /* Interest amount for debt transactions */
           type="input"
-          name="interest"
+          name="interest_amount"
           width={90}
-          exposed={focusedField === 'interest'}
-          focused={focusedField === 'interest'}
+          exposed={focusedField === 'interest_amount'}
+          focused={focusedField === 'interest_amount'}
           value={
             transaction.interest_amount != null && !isChild
               ? integerToCurrency(transaction.interest_amount)
@@ -1788,10 +1797,10 @@ const Transaction = memo(function Transaction({
         <InputCell
           /* Fee amount for debt transactions */
           type="input"
-          name="fee"
+          name="fee_amount"
           width={70}
-          exposed={focusedField === 'fee'}
-          focused={focusedField === 'fee'}
+          exposed={focusedField === 'fee_amount'}
+          focused={focusedField === 'fee_amount'}
           value={
             transaction.fee_amount != null && !isChild
               ? integerToCurrency(transaction.fee_amount)
@@ -1816,6 +1825,25 @@ const Transaction = memo(function Transaction({
           privacyFilter={{
             activationFilters: [!isTemporaryId(transaction.id)],
           }}
+        />
+      )}
+
+      {showBalance && isDebtAccount && (
+        <Cell
+          /* Balance field for debt accounts - positioned after Fee */
+          name="balance"
+          value={
+            runningBalance == null || isChild || isTemporaryId(id)
+              ? ''
+              : integerToCurrency(runningBalance)
+          }
+          valueStyle={{
+            color: runningBalance < 0 ? theme.errorText : theme.noticeTextLight,
+          }}
+          style={{ ...styles.tnum, ...amountStyle }}
+          width={103}
+          textAlign="right"
+          privacyFilter
         />
       )}
 
@@ -2742,6 +2770,9 @@ export const TransactionTable = forwardRef(
         'category',
         'debit',
         'credit',
+        'principal_amount',
+        'interest_amount',
+        'fee_amount',
         'cleared',
       ];
 
