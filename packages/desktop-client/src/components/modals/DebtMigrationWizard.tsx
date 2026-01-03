@@ -101,8 +101,8 @@ export function DebtMigrationWizard() {
         });
       });
       setAccountConfigs(configs);
-    } catch (e) {
-      console.error('Failed to load debt candidates:', e);
+    } catch {
+      // Error is handled by showing empty candidates list
     } finally {
       setLoading(false);
     }
