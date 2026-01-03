@@ -1045,7 +1045,15 @@ const Transaction = memo(function Transaction({
   };
 
   const onUpdateAfterConfirm: TransactionUpdateFunction = (name, value) => {
-    const newTransaction = { ...transaction, [name]: value };
+    // Convert debt amount fields from currency strings to integers
+    let processedValue: SerializedTransaction[typeof name] = value;
+    if (['principal_amount', 'interest_amount', 'fee_amount'].includes(name)) {
+      processedValue = (
+        value !== '' && value != null ? currencyToAmount(value as string) : null
+      ) as SerializedTransaction[typeof name];
+    }
+
+    const newTransaction = { ...transaction, [name]: processedValue };
 
     // Don't change the note to an empty string if it's null (since they are both rendered the same)
     if (name === 'notes' && value === '' && transaction.notes == null) {
@@ -1709,57 +1717,105 @@ const Transaction = memo(function Transaction({
       )}
 
       {isDebtAccount && (
-        <Cell
+        <InputCell
           /* Principal amount for debt transactions */
+          type="input"
           name="principal"
+          width={90}
+          exposed={focusedField === 'principal'}
+          focused={focusedField === 'principal'}
           value={
             transaction.principal_amount != null && !isChild
               ? integerToCurrency(transaction.principal_amount)
               : ''
           }
+          formatter={value =>
+            value ? amountToCurrency(currencyToAmount(value) || 0) : ''
+          }
           valueStyle={{
             color: theme.noticeTextLight,
           }}
-          style={{ ...styles.tnum, ...amountStyle }}
-          width={90}
           textAlign="right"
-          privacyFilter
+          onExpose={name => !isPreview && onEdit(id, name)}
+          style={{ ...styles.tnum, ...amountStyle }}
+          inputProps={{
+            value:
+              transaction.principal_amount != null && !isChild
+                ? integerToCurrency(transaction.principal_amount)
+                : '',
+            onUpdate: onUpdate.bind(null, 'principal_amount'),
+          }}
+          privacyFilter={{
+            activationFilters: [!isTemporaryId(transaction.id)],
+          }}
         />
       )}
       {isDebtAccount && (
-        <Cell
+        <InputCell
           /* Interest amount for debt transactions */
+          type="input"
           name="interest"
+          width={90}
+          exposed={focusedField === 'interest'}
+          focused={focusedField === 'interest'}
           value={
             transaction.interest_amount != null && !isChild
               ? integerToCurrency(transaction.interest_amount)
               : ''
           }
+          formatter={value =>
+            value ? amountToCurrency(currencyToAmount(value) || 0) : ''
+          }
           valueStyle={{
             color: theme.errorText,
           }}
-          style={{ ...styles.tnum, ...amountStyle }}
-          width={90}
           textAlign="right"
-          privacyFilter
+          onExpose={name => !isPreview && onEdit(id, name)}
+          style={{ ...styles.tnum, ...amountStyle }}
+          inputProps={{
+            value:
+              transaction.interest_amount != null && !isChild
+                ? integerToCurrency(transaction.interest_amount)
+                : '',
+            onUpdate: onUpdate.bind(null, 'interest_amount'),
+          }}
+          privacyFilter={{
+            activationFilters: [!isTemporaryId(transaction.id)],
+          }}
         />
       )}
       {isDebtAccount && (
-        <Cell
+        <InputCell
           /* Fee amount for debt transactions */
+          type="input"
           name="fee"
+          width={70}
+          exposed={focusedField === 'fee'}
+          focused={focusedField === 'fee'}
           value={
             transaction.fee_amount != null && !isChild
               ? integerToCurrency(transaction.fee_amount)
               : ''
           }
+          formatter={value =>
+            value ? amountToCurrency(currencyToAmount(value) || 0) : ''
+          }
           valueStyle={{
             color: theme.errorText,
           }}
-          style={{ ...styles.tnum, ...amountStyle }}
-          width={70}
           textAlign="right"
-          privacyFilter
+          onExpose={name => !isPreview && onEdit(id, name)}
+          style={{ ...styles.tnum, ...amountStyle }}
+          inputProps={{
+            value:
+              transaction.fee_amount != null && !isChild
+                ? integerToCurrency(transaction.fee_amount)
+                : '',
+            onUpdate: onUpdate.bind(null, 'fee_amount'),
+          }}
+          privacyFilter={{
+            activationFilters: [!isTemporaryId(transaction.id)],
+          }}
         />
       )}
 
