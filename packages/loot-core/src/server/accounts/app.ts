@@ -1723,6 +1723,7 @@ app.method('account-reopen', mutator(undoable(reopenAccount)));
 app.method('account-move', mutator(undoable(moveAccount)));
 app.method('account-convert-to-debt', mutator(undoable(convertToDebtAccount)));
 app.method('debt-detect-accounts', detectDebtAccountsHandler);
+app.method('debt-run-migration', mutator(runDebtMigration));
 app.method('secret-set', setSecret);
 app.method('secret-check', checkSecret);
 app.method('gocardless-poll-web-token', pollGoCardlessWebToken);
